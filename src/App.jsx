@@ -5,6 +5,7 @@ import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import ProductForm from './pages/ProductForm';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 
@@ -23,6 +24,8 @@ export default function App() {
           >
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/new" element={<ProductForm />} />
+            <Route path="/products/:id/edit" element={<ProductForm />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

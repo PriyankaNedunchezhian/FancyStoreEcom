@@ -1,25 +1,30 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { changePassword } from '../firebase/auth';
+import { changePassword } from '../supabase/auth';
 import ConfirmDialog from '../components/ConfirmDialog';
 import './Profile.css';
 
-function getPasswordErrorMessage(code) {
-  switch (code) {
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':
-      return 'Current password is incorrect.';
-    case 'auth/weak-password':
-      return 'New password should be at least 6 characters.';
-    case 'auth/requires-recent-login':
-      return 'Please sign out and sign in again, then retry.';
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Try again later.';
-    case 'auth/network-request-failed':
-      return 'Network error. Check your connection.';
-    default:
-      return 'Could not update password. Please try again.';
+function getPasswordErrorMessage(err) {
+  const message = (err?.message || '').toLowerCase();
+  const code = (err?.code || '').toLowerCase();
+
+  if (
+    code.includes('invalid') ||
+    message.includes('invalid login') ||
+    message.includes('invalid credentials')
+  ) {
+    return 'Current password is incorrect.';
   }
+  if (message.includes('at least') || message.includes('weak')) {
+    return 'New password should be at least 6 characters.';
+  }
+  if (message.includes('rate') || message.includes('too many')) {
+    return 'Too many attempts. Try again later.';
+  }
+  if (message.includes('network') || message.includes('fetch')) {
+    return 'Network error. Check your connection.';
+  }
+  return 'Could not update password. Please try again.';
 }
 
 export default function Profile() {
@@ -38,11 +43,11 @@ export default function Profile() {
   }
 
   const initials = (user?.email?.[0] || 'A').toUpperCase();
-  const createdAt = user?.metadata?.creationTime
-    ? new Date(user.metadata.creationTime).toLocaleDateString()
+  const createdAt = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString()
     : '—';
-  const lastSignIn = user?.metadata?.lastSignInTime
-    ? new Date(user.metadata.lastSignInTime).toLocaleString()
+  const lastSignIn = user?.last_sign_in_at
+    ? new Date(user.last_sign_in_at).toLocaleString()
     : '—';
 
   async function handlePasswordUpdate(e) {
@@ -68,7 +73,7 @@ export default function Profile() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(getPasswordErrorMessage(err.code));
+      setError(getPasswordErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -92,7 +97,7 @@ export default function Profile() {
           </div>
           <div>
             <dt>User ID</dt>
-            <dd className="mono">{user?.uid || '—'}</dd>
+            <dd className="mono">{user?.id || '—'}</dd>
           </div>
           <div>
             <dt>Created</dt>

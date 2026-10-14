@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase/config';
-import { logout as firebaseLogout } from '../firebase/auth';
+import { supabase } from '../supabase/config';
+import { logout as supabaseLogout } from '../supabase/auth';
 
 const AuthContext = createContext(null);
 
@@ -10,15 +9,29 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
       setLoading(false);
     });
-    return unsubscribe;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function logout() {
-    await firebaseLogout();
+    await supabaseLogout();
   }
 
   return (
