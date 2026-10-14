@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { changePassword } from '../supabase/auth';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import './Profile.css';
 
 function getPasswordErrorMessage(err) {
@@ -116,6 +117,10 @@ export default function Profile() {
         >
           Sign out
         </button>
+      </section>
+
+      <section className="profile-card">
+        <ThemeSwitcher variant="panel" />
       </section>
 
       <section className="profile-card">

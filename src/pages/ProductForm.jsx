@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   PRODUCT_CATEGORIES,
@@ -30,10 +30,21 @@ const emptyForm = {
   productStatus: 'Active',
 };
 
+function Field({ label, hint, className = '', children }) {
+  return (
+    <label className={`pf-field ${className}`.trim()}>
+      <span className="pf-label">{label}</span>
+      {children}
+      {hint ? <span className="product-form-hint">{hint}</span> : null}
+    </label>
+  );
+}
+
 export default function ProductForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [form, setForm] = useState(emptyForm);
   const [productId, setProductId] = useState(null);
@@ -52,6 +63,15 @@ export default function ProductForm() {
     if (imageFile) return URL.createObjectURL(imageFile);
     return imageUrl || '';
   }, [imageFile, imageUrl]);
+
+  const savings = useMemo(() => {
+    const mrp = Number(form.mrp);
+    const selling = Number(form.sellingPrice);
+    if (!Number.isFinite(mrp) || !Number.isFinite(selling) || mrp <= selling) {
+      return 0;
+    }
+    return mrp - selling;
+  }, [form.mrp, form.sellingPrice]);
 
   useEffect(() => {
     if (!imageFile) return undefined;
@@ -125,6 +145,19 @@ export default function ProductForm() {
 
       return next;
     });
+  }
+
+  function onFileChange(file) {
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file.');
+      return;
+    }
+    setError('');
+    setImageFile(file);
   }
 
   function validate() {
@@ -245,228 +278,312 @@ export default function ProductForm() {
 
   return (
     <div className="product-form-page">
+      <div className="pf-topbar">
+        <Link to="/products" className="pf-back">
+          ← Back to products
+        </Link>
+        <div className="pf-id-pill">
+          ID{' '}
+          <strong>
+            {isEdit ? productId ?? id : 'Auto · from 100'}
+          </strong>
+        </div>
+      </div>
+
       {error ? <p className="products-alert error">{error}</p> : null}
 
-      <div className="products-card">
-        <form className="product-form" onSubmit={handleSubmit}>
-          <div className="product-form-grid">
-            <label>
-              Product ID
-              <input
-                type="text"
-                value={
-                  isEdit
-                    ? productId ?? id
-                    : 'Assigned on save (starts from 100)'
-                }
-                readOnly
-                disabled
-              />
-              {!isEdit ? (
-                <p className="product-form-hint">
-                  Sequential ID is generated automatically.
-                </p>
-              ) : null}
-            </label>
+      <form className="product-form" onSubmit={handleSubmit}>
+        <div className="pf-layout">
+          <aside className="pf-media-card products-card">
+            <div className="pf-section-head">
+              <h2>Product image</h2>
+              <p>Upload a clear photo of the jewellery piece.</p>
+            </div>
 
-            <label>
-              Product name *
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => updateField('name', e.target.value)}
-                required
-              />
-            </label>
-
-            <label>
-              Category type *
-              <select
-                value={form.category}
-                onChange={(e) => updateField('category', e.target.value)}
-              >
-                {PRODUCT_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Brand
-              <input
-                type="text"
-                value={form.brand}
-                onChange={(e) => updateField('brand', e.target.value)}
-              />
-            </label>
-
-            <label className="full">
-              Product description
-              <textarea
-                value={form.description}
-                onChange={(e) => updateField('description', e.target.value)}
-              />
-            </label>
-
-            <label className="full">
-              Image
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              />
+            <button
+              type="button"
+              className={`pf-dropzone${previewUrl ? ' has-image' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                onFileChange(e.dataTransfer.files?.[0] || null);
+              }}
+            >
               {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Product preview"
-                  className="product-image-preview"
-                />
+                <img src={previewUrl} alt="Product preview" />
               ) : (
-                <p className="product-form-hint">No image selected.</p>
+                <div className="pf-dropzone-empty">
+                  <span className="pf-dropzone-icon" aria-hidden="true">
+                    +
+                  </span>
+                  <strong>Add product photo</strong>
+                  <span>PNG or JPG · drag & drop or click</span>
+                </div>
               )}
-            </label>
-
-            <label>
-              Size
-              <input
-                type="text"
-                value={form.size}
-                onChange={(e) => updateField('size', e.target.value)}
-                placeholder="e.g. Free size, 2.4"
-              />
-            </label>
-
-            <label>
-              Colour
-              <input
-                type="text"
-                value={form.colour}
-                onChange={(e) => updateField('colour', e.target.value)}
-              />
-            </label>
-
-            <label>
-              Material
-              <input
-                type="text"
-                value={form.material}
-                onChange={(e) => updateField('material', e.target.value)}
-              />
-            </label>
-
-            <label>
-              Weight
-              <input
-                type="text"
-                value={form.weight}
-                onChange={(e) => updateField('weight', e.target.value)}
-                placeholder="e.g. 12 g"
-              />
-            </label>
-
-            <label>
-              MRP *
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.mrp}
-                onChange={(e) => updateField('mrp', e.target.value)}
-                required
-              />
-            </label>
-
-            <label>
-              Selling price *
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.sellingPrice}
-                onChange={(e) => updateField('sellingPrice', e.target.value)}
-                required
-              />
-            </label>
-
-            <label>
-              Discount
-              <input type="text" value={`${discount.toFixed(2)}%`} readOnly />
-              <p className="product-form-hint">
-                Calculated from MRP and selling price.
-              </p>
-            </label>
-
-            <label>
-              Available quantity *
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={form.availableQuantity}
-                onChange={(e) =>
-                  updateField('availableQuantity', e.target.value)
-                }
-                required
-              />
-            </label>
-
-            <label>
-              Stock status
-              <select
-                value={form.stockStatus}
-                onChange={(e) => updateField('stockStatus', e.target.value)}
-              >
-                {STOCK_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Return eligibility
-              <select
-                value={form.returnEligibility}
-                onChange={(e) =>
-                  updateField('returnEligibility', e.target.value)
-                }
-              >
-                {RETURN_ELIGIBILITIES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Product status
-              <select
-                value={form.productStatus}
-                onChange={(e) => updateField('productStatus', e.target.value)}
-              >
-                {PRODUCT_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="product-form-actions">
-            <button type="submit" className="products-btn" disabled={saving}>
-              {saving ? 'Saving…' : isEdit ? 'Update product' : 'Create product'}
             </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="pf-file-input"
+              onChange={(e) => onFileChange(e.target.files?.[0] || null)}
+            />
+
+            <div className="pf-media-actions">
+              <button
+                type="button"
+                className="products-btn secondary"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {previewUrl ? 'Change image' : 'Choose image'}
+              </button>
+              {previewUrl && imageFile ? (
+                <button
+                  type="button"
+                  className="products-btn danger"
+                  onClick={() => {
+                    setImageFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          </aside>
+
+          <div className="pf-main">
+            <section className="products-card pf-section">
+              <div className="pf-section-head">
+                <h2>Basic details</h2>
+                <p>Name, category, and how the product is described.</p>
+              </div>
+              <div className="product-form-grid">
+                <Field label="Product name *" className="full">
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => updateField('name', e.target.value)}
+                    placeholder="e.g. Gold-plated hoop earrings"
+                    required
+                  />
+                </Field>
+
+                <Field label="Category type *">
+                  <select
+                    value={form.category}
+                    onChange={(e) => updateField('category', e.target.value)}
+                  >
+                    {PRODUCT_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Brand">
+                  <input
+                    type="text"
+                    value={form.brand}
+                    onChange={(e) => updateField('brand', e.target.value)}
+                    placeholder="e.g. Fancy Store"
+                  />
+                </Field>
+
+                <Field label="Product description" className="full">
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    placeholder="Short description for the catalog…"
+                  />
+                </Field>
+              </div>
+            </section>
+
+            <section className="products-card pf-section">
+              <div className="pf-section-head">
+                <h2>Specifications</h2>
+                <p>Physical attributes customers care about.</p>
+              </div>
+              <div className="product-form-grid">
+                <Field label="Size">
+                  <input
+                    type="text"
+                    value={form.size}
+                    onChange={(e) => updateField('size', e.target.value)}
+                    placeholder="e.g. Free size, 2.4"
+                  />
+                </Field>
+                <Field label="Colour">
+                  <input
+                    type="text"
+                    value={form.colour}
+                    onChange={(e) => updateField('colour', e.target.value)}
+                    placeholder="e.g. Rose gold"
+                  />
+                </Field>
+                <Field label="Material">
+                  <input
+                    type="text"
+                    value={form.material}
+                    onChange={(e) => updateField('material', e.target.value)}
+                    placeholder="e.g. Alloy, Sterling silver"
+                  />
+                </Field>
+                <Field label="Weight">
+                  <input
+                    type="text"
+                    value={form.weight}
+                    onChange={(e) => updateField('weight', e.target.value)}
+                    placeholder="e.g. 12 g"
+                  />
+                </Field>
+              </div>
+            </section>
+
+            <section className="products-card pf-section">
+              <div className="pf-section-head row">
+                <div>
+                  <h2>Pricing</h2>
+                  <p>MRP, selling price, and auto discount.</p>
+                </div>
+                <div className="pf-discount-chip">
+                  <span>Discount</span>
+                  <strong>{discount.toFixed(1)}%</strong>
+                </div>
+              </div>
+              <div className="product-form-grid pf-pricing-grid">
+                <Field label="MRP *">
+                  <div className="pf-input-affix">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.mrp}
+                      onChange={(e) => updateField('mrp', e.target.value)}
+                      required
+                    />
+                  </div>
+                </Field>
+                <Field label="Selling price *">
+                  <div className="pf-input-affix">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.sellingPrice}
+                      onChange={(e) =>
+                        updateField('sellingPrice', e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                </Field>
+              </div>
+              {savings > 0 ? (
+                <p className="pf-savings">
+                  Customer saves ₹
+                  {savings.toLocaleString('en-IN', {
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  vs MRP
+                </p>
+              ) : (
+                <p className="product-form-hint">
+                  Discount updates automatically when MRP and selling price
+                  differ.
+                </p>
+              )}
+            </section>
+
+            <section className="products-card pf-section">
+              <div className="pf-section-head">
+                <h2>Inventory & status</h2>
+                <p>Stock, returns, and catalog visibility.</p>
+              </div>
+              <div className="product-form-grid">
+                <Field label="Available quantity *">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.availableQuantity}
+                    onChange={(e) =>
+                      updateField('availableQuantity', e.target.value)
+                    }
+                    required
+                  />
+                </Field>
+                <Field label="Stock status">
+                  <select
+                    value={form.stockStatus}
+                    onChange={(e) => updateField('stockStatus', e.target.value)}
+                  >
+                    {STOCK_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Return eligibility">
+                  <select
+                    value={form.returnEligibility}
+                    onChange={(e) =>
+                      updateField('returnEligibility', e.target.value)
+                    }
+                  >
+                    {RETURN_ELIGIBILITIES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Product status">
+                  <select
+                    value={form.productStatus}
+                    onChange={(e) =>
+                      updateField('productStatus', e.target.value)
+                    }
+                  >
+                    {PRODUCT_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div className="pf-footer">
+          <p className="pf-footer-note">
+            {isEdit
+              ? 'Changes apply to the live catalog after you save.'
+              : 'Product ID is assigned automatically when you create.'}
+          </p>
+          <div className="product-form-actions">
             <Link to="/products" className="products-btn secondary">
               Cancel
             </Link>
+            <button type="submit" className="products-btn" disabled={saving}>
+              {saving
+                ? 'Saving…'
+                : isEdit
+                  ? 'Update product'
+                  : 'Create product'}
+            </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,0 +1,115 @@
+:root,
+[data-theme='classic'] {
+  --ink: #0a0a0a;
+  --ink-soft: #1a1a1a;
+  --paper: #ffffff;
+  --paper-muted: #f7f7f8;
+  --surface: #f4f4f5;
+  --line: #e8e8ea;
+  --muted: #737373;
+  --accent: #2563eb;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --danger-line: #fecdca;
+  --ok: #067647;
+  --ok-bg: #edfcf2;
+  --ok-line: #abefc6;
+  --info-bg: #eff4ff;
+  --info: #175cd3;
+  --shadow: rgba(10, 10, 10, 0.06);
+  --dropzone: #fafafa;
+  color-scheme: light;
+}
+
+[data-theme='midnight'] {
+  --ink: #f2f2f3;
+  --ink-soft: #e4e4e7;
+  --paper: #18181b;
+  --paper-muted: #222226;
+  --surface: #0f0f12;
+  --line: #2e2e33;
+  --muted: #a1a1aa;
+  --accent: #60a5fa;
+  --danger: #f97066;
+  --danger-bg: #3b1715;
+  --danger-line: #7a271a;
+  --ok: #47cd89;
+  --ok-bg: #123b2a;
+  --ok-line: #085d3a;
+  --info-bg: #182230;
+  --info: #84adff;
+  --shadow: rgba(0, 0, 0, 0.35);
+  --dropzone: #1f1f24;
+  color-scheme: dark;
+}
+
+[data-theme='ocean'] {
+  --ink: #0f2f3a;
+  --ink-soft: #163b48;
+  --paper: #ffffff;
+  --paper-muted: #eef5f6;
+  --surface: #e8f1f3;
+  --line: #c5d7dc;
+  --muted: #5b737b;
+  --accent: #0d9488;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --danger-line: #fecdca;
+  --ok: #067647;
+  --ok-bg: #edfcf2;
+  --ok-line: #abefc6;
+  --info-bg: #e0f2fe;
+  --info: #0369a1;
+  --shadow: rgba(15, 47, 58, 0.08);
+  --dropzone: #f2f8f9;
+  color-scheme: light;
+}
+
+[data-theme='olive'] {
+  --ink: #1f2a1c;
+  --ink-soft: #2c3a27;
+  --paper: #fffcf7;
+  --paper-muted: #f3f0e8;
+  --surface: #ece8de;
+  --line: #d8d2c4;
+  --muted: #6b6a5e;
+  --accent: #5c6b3a;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --danger-line: #fecdca;
+  --ok: #3f6212;
+  --ok-bg: #f3f8e8;
+  --ok-line: #c4d9a0;
+  --info-bg: #eef2e6;
+  --info: #3f6212;
+  --shadow: rgba(31, 42, 28, 0.08);
+  --dropzone: #f7f4ec;
+  color-scheme: light;
+}
+
+[data-theme='blush'] {
+  --ink: #2a1a1d;
+  --ink-soft: #3b2429;
+  --paper: #fffbfc;
+  --paper-muted: #f8f0f2;
+  --surface: #f3e9ec;
+  --line: #e4d4d8;
+  --muted: #7a646a;
+  --accent: #b76e79;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --danger-line: #fecdca;
+  --ok: #067647;
+  --ok-bg: #edfcf2;
+  --ok-line: #abefc6;
+  --info-bg: #fce7eb;
+  --info: #9f1239;
+  --shadow: rgba(42, 26, 29, 0.08);
+  --dropzone: #faf4f6;
+  color-scheme: light;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+}

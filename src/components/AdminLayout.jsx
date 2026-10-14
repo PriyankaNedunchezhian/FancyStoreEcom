@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ConfirmDialog from './ConfirmDialog';
+import ThemeSwitcher from './ThemeSwitcher';
 import './AdminLayout.css';
 
 const navItems = [
@@ -197,6 +198,8 @@ export default function AdminLayout() {
 
           <div className="navbar-right">
             <div className="navbar-search-desktop">{searchField}</div>
+
+            <ThemeSwitcher />
 
             <button type="button" className="icon-btn help-btn" aria-label="Help">
               <svg viewBox="0 0 24 24" aria-hidden="true">

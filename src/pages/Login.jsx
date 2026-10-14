@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { login, resetPassword } from '../supabase/auth';
 import { useAuth } from '../context/AuthContext';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import './Login.css';
 
 function getAuthErrorMessage(err, mode) {
@@ -111,6 +112,9 @@ export default function Login() {
       </section>
 
       <section className="login-form-side">
+        <div className="login-theme-bar">
+          <ThemeSwitcher />
+        </div>
         <div className="login-panel" key={mode}>
           <p className="login-kicker">{isReset ? 'Account recovery' : 'Welcome back'}</p>
           <h1>{isReset ? 'Reset password' : 'Sign in'}</h1>
