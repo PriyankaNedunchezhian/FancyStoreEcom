@@ -194,9 +194,29 @@
   gap: 0.45rem;
 }
 
+.products-icon-action {
+  gap: 0.35rem;
+}
+
+.products-icon-action svg {
+  flex-shrink: 0;
+}
+
 .products-actions .products-btn {
   padding: 0.45rem 0.7rem;
   font-size: 0.8rem;
+}
+
+.products-actions .dtt-icon-only {
+  width: 2.6rem;
+  min-width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+}
+
+.products-actions .dtt-icon-only svg {
+  width: 20px;
+  height: 20px;
 }
 
 .product-form-page {

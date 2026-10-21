@@ -99,3 +99,36 @@ create policy "Public can read product images"
   on storage.objects for select
   to public
   using (bucket_id = 'products');
+
+-- Customer wishlists (one row per customer + product)
+create table if not exists public.wishlists (
+  id bigint generated always as identity primary key,
+  customer_id uuid not null references auth.users (id) on delete cascade,
+  product_id bigint not null references public.products (product_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (customer_id, product_id)
+);
+
+create index if not exists wishlists_product_id_idx on public.wishlists (product_id);
+create index if not exists wishlists_customer_id_idx on public.wishlists (customer_id);
+
+alter table public.wishlists enable row level security;
+
+drop policy if exists "Authenticated users can read wishlists" on public.wishlists;
+drop policy if exists "Customers can insert own wishlist rows" on public.wishlists;
+drop policy if exists "Customers can delete own wishlist rows" on public.wishlists;
+
+create policy "Authenticated users can read wishlists"
+  on public.wishlists for select
+  to authenticated
+  using (true);
+
+create policy "Customers can insert own wishlist rows"
+  on public.wishlists for insert
+  to authenticated
+  with check (auth.uid() = customer_id);
+
+create policy "Customers can delete own wishlist rows"
+  on public.wishlists for delete
+  to authenticated
+  using (auth.uid() = customer_id);
