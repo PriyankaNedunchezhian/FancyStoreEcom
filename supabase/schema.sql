@@ -9,6 +9,7 @@ create table if not exists public.products (
   category text not null default 'Other',
   description text not null default '',
   image_url text not null default '',
+  image_urls text[] not null default '{}',
   size text not null default '',
   mrp numeric(12, 2) not null default 0,
   selling_price numeric(12, 2) not null default 0,
@@ -26,6 +27,20 @@ create table if not exists public.products (
 );
 
 alter sequence products_product_id_seq owned by public.products.product_id;
+
+-- Multiple images (max 6); migrate legacy single image_url when needed
+alter table public.products
+  add column if not exists image_urls text[] not null default '{}';
+
+update public.products
+set image_urls = array[image_url]
+where coalesce(image_url, '') <> ''
+  and cardinality(image_urls) = 0;
+
+alter table public.products drop constraint if exists products_image_urls_max;
+alter table public.products
+  add constraint products_image_urls_max
+  check (cardinality(image_urls) <= 6);
 
 alter table public.products enable row level security;
 

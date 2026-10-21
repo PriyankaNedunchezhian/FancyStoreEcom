@@ -16,6 +16,15 @@ export const PRODUCT_STATUSES = ['Active', 'Inactive'];
 
 const TABLE = 'products';
 const BUCKET = 'products';
+export const MAX_PRODUCT_IMAGES = 6;
+
+function normalizeImageUrls(urls, fallback = '') {
+  const list = Array.isArray(urls)
+    ? urls.filter((url) => typeof url === 'string' && url.trim())
+    : [];
+  if (list.length === 0 && fallback) return [fallback];
+  return list.slice(0, MAX_PRODUCT_IMAGES);
+}
 
 export function calcDiscountPercent(mrp, sellingPrice) {
   const m = Number(mrp);
@@ -29,13 +38,15 @@ export function calcDiscountPercent(mrp, sellingPrice) {
 
 function mapProduct(row) {
   if (!row) return null;
+  const imageUrls = normalizeImageUrls(row.image_urls, row.image_url ?? '');
   return {
     id: String(row.product_id),
     productId: row.product_id,
     name: row.name ?? '',
     category: row.category ?? '',
     description: row.description ?? '',
-    imageUrl: row.image_url ?? '',
+    imageUrl: imageUrls[0] ?? '',
+    imageUrls,
     size: row.size ?? '',
     mrp: Number(row.mrp ?? 0),
     sellingPrice: Number(row.selling_price ?? 0),
@@ -54,11 +65,16 @@ function mapProduct(row) {
 }
 
 function toRow(data) {
+  const imageUrls = normalizeImageUrls(
+    data.imageUrls,
+    data.imageUrl ?? '',
+  );
   return {
     name: data.name,
     category: data.category,
     description: data.description ?? '',
-    image_url: data.imageUrl ?? '',
+    image_url: imageUrls[0] ?? '',
+    image_urls: imageUrls,
     size: data.size ?? '',
     mrp: data.mrp,
     selling_price: data.sellingPrice,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
+  MAX_PRODUCT_IMAGES,
   PRODUCT_CATEGORIES,
   PRODUCT_STATUSES,
   RETURN_ELIGIBILITIES,
@@ -30,6 +31,17 @@ const emptyForm = {
   productStatus: 'Active',
 };
 
+let imageEntryId = 0;
+function makeImageEntry({ url = '', file = null } = {}) {
+  imageEntryId += 1;
+  return {
+    id: `img-${imageEntryId}`,
+    url,
+    file,
+    previewUrl: file ? URL.createObjectURL(file) : url,
+  };
+}
+
 function Field({ label, hint, className = '', children }) {
   return (
     <label className={`pf-field ${className}`.trim()}>
@@ -48,8 +60,7 @@ export default function ProductForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [productId, setProductId] = useState(null);
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -58,11 +69,6 @@ export default function ProductForm() {
     () => calcDiscountPercent(form.mrp, form.sellingPrice),
     [form.mrp, form.sellingPrice],
   );
-
-  const previewUrl = useMemo(() => {
-    if (imageFile) return URL.createObjectURL(imageFile);
-    return imageUrl || '';
-  }, [imageFile, imageUrl]);
 
   const savings = useMemo(() => {
     const mrp = Number(form.mrp);
@@ -73,10 +79,18 @@ export default function ProductForm() {
     return mrp - selling;
   }, [form.mrp, form.sellingPrice]);
 
+  const slotsLeft = MAX_PRODUCT_IMAGES - images.length;
+  const coverPreview = images[0]?.previewUrl || '';
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
+
   useEffect(() => {
-    if (!imageFile) return undefined;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [imageFile, previewUrl]);
+    return () => {
+      imagesRef.current.forEach((img) => {
+        if (img.file && img.previewUrl) URL.revokeObjectURL(img.previewUrl);
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!isEdit) return undefined;
@@ -93,7 +107,9 @@ export default function ProductForm() {
           return;
         }
         setProductId(product.productId);
-        setImageUrl(product.imageUrl || '');
+        setImages(
+          (product.imageUrls || []).map((url) => makeImageEntry({ url })),
+        );
         setForm({
           name: product.name,
           category: product.category || PRODUCT_CATEGORIES[0],
@@ -147,17 +163,44 @@ export default function ProductForm() {
     });
   }
 
-  function onFileChange(file) {
-    if (!file) {
-      setImageFile(null);
+  function addFiles(fileList) {
+    const incoming = Array.from(fileList || []).filter((file) =>
+      file.type.startsWith('image/'),
+    );
+    if (incoming.length === 0) {
+      setError('Please choose image files (PNG or JPG).');
       return;
     }
-    if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file.');
-      return;
-    }
+
+    setImages((prev) => {
+      const room = MAX_PRODUCT_IMAGES - prev.length;
+      if (room <= 0) {
+        setError(`You can upload up to ${MAX_PRODUCT_IMAGES} images.`);
+        return prev;
+      }
+      const accepted = incoming.slice(0, room);
+      if (incoming.length > room) {
+        setError(
+          `Only ${MAX_PRODUCT_IMAGES} images allowed. Added ${accepted.length} of ${incoming.length}.`,
+        );
+      } else {
+        setError('');
+      }
+      return [...prev, ...accepted.map((file) => makeImageEntry({ file }))];
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function removeImage(entryId) {
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === entryId);
+      if (target?.file && target.previewUrl) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((img) => img.id !== entryId);
+    });
     setError('');
-    setImageFile(file);
   }
 
   function validate() {
@@ -176,7 +219,22 @@ export default function ProductForm() {
     if (!Number.isFinite(qty) || qty < 0 || !Number.isInteger(qty)) {
       return 'Available quantity must be a whole number ≥ 0.';
     }
+    if (images.length > MAX_PRODUCT_IMAGES) {
+      return `Maximum ${MAX_PRODUCT_IMAGES} images allowed.`;
+    }
     return '';
+  }
+
+  async function resolveImageUrls(productKey) {
+    const urls = [];
+    for (const img of images) {
+      if (img.file) {
+        urls.push(await uploadProductImage(img.file, productKey));
+      } else if (img.url) {
+        urls.push(img.url);
+      }
+    }
+    return urls.slice(0, MAX_PRODUCT_IMAGES);
   }
 
   async function handleSubmit(e) {
@@ -211,22 +269,32 @@ export default function ProductForm() {
       availableQuantity,
       returnEligibility: form.returnEligibility,
       productStatus: form.productStatus,
-      imageUrl,
+      imageUrls: [],
+      imageUrl: '',
     };
 
     setSaving(true);
     try {
       if (isEdit) {
-        let nextImageUrl = imageUrl;
-        if (imageFile) {
-          nextImageUrl = await uploadProductImage(imageFile, id);
-        }
-        await updateProduct(id, { ...payload, imageUrl: nextImageUrl });
+        const imageUrls = await resolveImageUrls(id);
+        await updateProduct(id, {
+          ...payload,
+          imageUrls,
+          imageUrl: imageUrls[0] ?? '',
+        });
       } else {
-        const newId = await createProduct({ ...payload, imageUrl: '' });
-        if (imageFile) {
-          const nextImageUrl = await uploadProductImage(imageFile, newId);
-          await updateProduct(newId, { ...payload, imageUrl: nextImageUrl });
+        const newId = await createProduct({
+          ...payload,
+          imageUrls: [],
+          imageUrl: '',
+        });
+        const imageUrls = await resolveImageUrls(newId);
+        if (imageUrls.length) {
+          await updateProduct(newId, {
+            ...payload,
+            imageUrls,
+            imageUrl: imageUrls[0] ?? '',
+          });
         }
       }
       navigate('/products');
@@ -247,10 +315,11 @@ export default function ProductForm() {
       } else if (
         lower.includes('relation') ||
         lower.includes('does not exist') ||
-        lower.includes('schema cache')
+        lower.includes('schema cache') ||
+        lower.includes('image_urls')
       ) {
         setError(
-          'Products table missing. Run supabase/schema.sql in the Supabase SQL Editor, then try again.',
+          'Products table missing or outdated. Run supabase/schema.sql in the Supabase SQL Editor, then try again.',
         );
       } else if (lower.includes('bucket') || lower.includes('storage')) {
         setError(
@@ -296,62 +365,88 @@ export default function ProductForm() {
         <div className="pf-layout">
           <aside className="pf-media-card products-card">
             <div className="pf-section-head">
-              <h2>Product image</h2>
-              <p>Upload a clear photo of the jewellery piece.</p>
+              <h2>Product images</h2>
+              <p>
+                Up to {MAX_PRODUCT_IMAGES} photos. First image is the cover.
+              </p>
             </div>
 
             <button
               type="button"
-              className={`pf-dropzone${previewUrl ? ' has-image' : ''}`}
-              onClick={() => fileInputRef.current?.click()}
+              className={`pf-dropzone${coverPreview ? ' has-image' : ''}`}
+              onClick={() => {
+                if (slotsLeft > 0) fileInputRef.current?.click();
+              }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
-                onFileChange(e.dataTransfer.files?.[0] || null);
+                if (slotsLeft > 0) addFiles(e.dataTransfer.files);
               }}
+              disabled={slotsLeft <= 0 && !coverPreview}
             >
-              {previewUrl ? (
-                <img src={previewUrl} alt="Product preview" />
+              {coverPreview ? (
+                <img src={coverPreview} alt="Cover preview" />
               ) : (
                 <div className="pf-dropzone-empty">
                   <span className="pf-dropzone-icon" aria-hidden="true">
                     +
                   </span>
-                  <strong>Add product photo</strong>
-                  <span>PNG or JPG · drag & drop or click</span>
+                  <strong>Add product photos</strong>
+                  <span>PNG or JPG · up to {MAX_PRODUCT_IMAGES}</span>
                 </div>
               )}
             </button>
+
+            {images.length > 0 ? (
+              <ul className="pf-image-grid">
+                {images.map((img, index) => (
+                  <li key={img.id} className="pf-image-tile">
+                    <img
+                      src={img.previewUrl}
+                      alt={`Product ${index + 1}`}
+                    />
+                    {index === 0 ? (
+                      <span className="pf-image-badge">Cover</span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="pf-image-remove"
+                      aria-label={`Remove image ${index + 1}`}
+                      onClick={() => removeImage(img.id)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
 
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="pf-file-input"
-              onChange={(e) => onFileChange(e.target.files?.[0] || null)}
+              onChange={(e) => addFiles(e.target.files)}
             />
 
             <div className="pf-media-actions">
               <button
                 type="button"
                 className="products-btn secondary"
+                disabled={slotsLeft <= 0}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {previewUrl ? 'Change image' : 'Choose image'}
+                {images.length === 0
+                  ? 'Choose images'
+                  : slotsLeft > 0
+                    ? `Add more (${slotsLeft} left)`
+                    : 'Limit reached'}
               </button>
-              {previewUrl && imageFile ? (
-                <button
-                  type="button"
-                  className="products-btn danger"
-                  onClick={() => {
-                    setImageFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                  }}
-                >
-                  Remove
-                </button>
-              ) : null}
             </div>
+            <p className="product-form-hint">
+              {images.length} of {MAX_PRODUCT_IMAGES} images
+            </p>
           </aside>
 
           <div className="pf-main">

@@ -96,9 +96,9 @@ export default function Products() {
                   <tr key={product.id}>
                     <td>{product.productId}</td>
                     <td>
-                      {product.imageUrl ? (
+                      {product.imageUrl || product.imageUrls?.[0] ? (
                         <img
-                          src={product.imageUrl}
+                          src={product.imageUrl || product.imageUrls[0]}
                           alt=""
                           className="products-thumb"
                         />
