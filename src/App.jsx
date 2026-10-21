@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import ProductForm from './pages/ProductForm';
 import Orders from './pages/Orders';
+import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/products/new" element={<ProductForm />} />
               <Route path="/products/:id/edit" element={<ProductForm />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

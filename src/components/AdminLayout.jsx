@@ -39,6 +39,17 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    to: '/wishlist',
+    label: 'Wishlist',
+    title: 'Wishlist',
+    subtitle: 'See which products customers have saved.',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      </svg>
+    ),
+  },
 ];
 
 const pageMeta = {
@@ -78,7 +89,6 @@ export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [search, setSearch] = useState('');
   const activePage = getActivePage(location.pathname);
 
   async function handleLogoutConfirm() {
@@ -98,20 +108,6 @@ export default function AdminLayout() {
   }, [sidebarOpen]);
 
   const initials = (user?.email?.[0] || 'A').toUpperCase();
-
-  const searchField = (
-    <label className="navbar-search">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M10.5 3a7.5 7.5 0 015.95 12.07l3.74 3.74-1.41 1.41-3.74-3.74A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />
-      </svg>
-      <input
-        type="search"
-        placeholder="Search orders, customers..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-    </label>
-  );
 
   return (
     <div className={`admin-shell${sidebarOpen ? ' sidebar-open' : ''}`}>
@@ -197,8 +193,6 @@ export default function AdminLayout() {
           </div>
 
           <div className="navbar-right">
-            <div className="navbar-search-desktop">{searchField}</div>
-
             <ThemeSwitcher />
 
             <button type="button" className="icon-btn help-btn" aria-label="Help">
@@ -217,8 +211,6 @@ export default function AdminLayout() {
             </Link>
           </div>
         </header>
-
-        <div className="navbar-search-mobile">{searchField}</div>
 
         <main className="admin-content">
           <div className="page-header">
