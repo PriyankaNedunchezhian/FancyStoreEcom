@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ConfirmDialog from './ConfirmDialog';
+import ThemeSwitcher from './ThemeSwitcher';
 import './AdminLayout.css';
 
 const navItems = [
@@ -45,11 +46,26 @@ const pageMeta = {
     title: 'Profile',
     subtitle: 'View admin details and update your password.',
   },
+  '/products/new': {
+    title: 'Add product',
+    subtitle: 'Create a new catalog item with pricing and inventory.',
+  },
 };
 
 function getActivePage(pathname) {
   if (pathname.startsWith('/profile')) {
     return pageMeta['/profile'];
+  }
+
+  if (pathname === '/products/new') {
+    return pageMeta['/products/new'];
+  }
+
+  if (/^\/products\/[^/]+\/edit$/.test(pathname)) {
+    return {
+      title: 'Edit product',
+      subtitle: 'Update catalog details, pricing, and stock.',
+    };
   }
 
   return (
@@ -182,6 +198,8 @@ export default function AdminLayout() {
 
           <div className="navbar-right">
             <div className="navbar-search-desktop">{searchField}</div>
+
+            <ThemeSwitcher />
 
             <button type="button" className="icon-btn help-btn" aria-label="Help">
               <svg viewBox="0 0 24 24" aria-hidden="true">

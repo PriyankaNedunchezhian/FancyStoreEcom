@@ -6,8 +6,8 @@
 }
 
 .profile-card {
-  background: #ffffff;
-  border: 1px solid #e8e8ea;
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: clamp(1rem, 3vw, 1.35rem) clamp(1rem, 3vw, 1.4rem)
     clamp(1.15rem, 3vw, 1.5rem);
@@ -26,8 +26,8 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  background: #0a0a0a;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -40,14 +40,14 @@
   font-size: clamp(1.05rem, 2.5vw, 1.15rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: #0a0a0a;
+  color: var(--ink);
 }
 
 .profile-card-head p {
   margin: 0.25rem 0 0;
   font-family: 'Manrope', system-ui, sans-serif;
   font-size: clamp(0.84rem, 2.2vw, 0.9rem);
-  color: #737373;
+  color: var(--muted);
   line-height: 1.45;
 }
 
@@ -61,7 +61,7 @@
   display: grid;
   gap: 0.2rem;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid #f0f0f1;
+  border-bottom: 1px solid var(--line);
 }
 
 .profile-meta div:last-child {
@@ -75,7 +75,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8a8a8a;
+  color: var(--muted);
 }
 
 .profile-meta dd {
@@ -83,7 +83,7 @@
   font-family: 'Manrope', system-ui, sans-serif;
   font-size: clamp(0.9rem, 2.4vw, 0.98rem);
   font-weight: 600;
-  color: #0a0a0a;
+  color: var(--ink);
   word-break: break-all;
 }
 
@@ -96,10 +96,10 @@
   margin-top: 1.25rem;
   width: 100%;
   max-width: 220px;
-  border: 1px solid #fecdca;
+  border: 1px solid var(--danger-line);
   border-radius: 0;
-  background: #fff;
-  color: #b42318;
+  background: var(--paper);
+  color: var(--danger);
   padding: 0.7rem 1rem;
   font-family: 'Manrope', system-ui, sans-serif;
   font-size: 0.9rem;
@@ -108,7 +108,7 @@
 }
 
 .profile-signout:hover {
-  background: #fef3f2;
+  background: var(--danger-bg);
 }
 
 .profile-password-form {
@@ -122,24 +122,24 @@
   font-family: 'Manrope', system-ui, sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--ink-soft);
 }
 
 .profile-password-form input {
   width: 100%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--line);
   border-radius: 0;
   padding: 0.8rem 0.9rem;
-  background: #fff;
-  color: #0a0a0a;
+  background: var(--paper);
+  color: var(--ink);
   font-family: 'Manrope', system-ui, sans-serif;
   font-size: 1rem;
   outline: none;
 }
 
 .profile-password-form input:focus {
-  border-color: #0a0a0a;
-  background: #f7f7f8;
+  border-color: var(--ink);
+  background: var(--paper-muted);
 }
 
 .profile-alert {
@@ -150,24 +150,24 @@
 }
 
 .profile-alert.error {
-  border: 1px solid #fecdca;
-  background: #fef3f2;
-  color: #b42318;
+  border: 1px solid var(--danger-line);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .profile-alert.success {
-  border: 1px solid #abefc6;
-  background: #edfcf2;
-  color: #067647;
+  border: 1px solid var(--ok-line);
+  background: var(--ok-bg);
+  color: var(--ok);
 }
 
 .profile-submit {
   justify-self: start;
-  border: 1px solid #0a0a0a;
+  border: 1px solid var(--ink);
   border-radius: 0;
   padding: 0.75rem 1.1rem;
-  background: #0a0a0a;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
@@ -176,8 +176,8 @@
 }
 
 .profile-submit:hover:not(:disabled) {
-  background: #fff;
-  color: #0a0a0a;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .profile-submit:disabled {

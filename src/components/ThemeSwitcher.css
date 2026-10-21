@@ -1,0 +1,134 @@
+.theme-switcher {
+  position: relative;
+}
+
+.theme-trigger svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.theme-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 40;
+  min-width: 180px;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 12px 28px var(--shadow);
+}
+
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  padding: 0.55rem 0.6rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-menu-item:hover,
+.theme-menu-item.selected {
+  background: var(--paper-muted);
+}
+
+.theme-swatches {
+  display: inline-flex;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.theme-swatches.compact .theme-swatch {
+  width: 10px;
+  height: 10px;
+}
+
+.theme-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.theme-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.theme-panel-head h2 {
+  margin: 0;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.theme-panel-head p {
+  margin: 0.25rem 0 0;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: clamp(0.84rem, 2.2vw, 0.9rem);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.theme-panel-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.theme-option:hover {
+  background: var(--paper-muted);
+}
+
+.theme-option.selected {
+  border-color: var(--ink);
+  background: var(--paper-muted);
+}
+
+.theme-option-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.theme-option-copy strong {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.theme-option-copy span {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .theme-panel-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

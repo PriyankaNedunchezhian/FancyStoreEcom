@@ -1,10 +1,4 @@
 .admin-shell {
-  --ink: #0a0a0a;
-  --paper: #ffffff;
-  --surface: #f4f4f5;
-  --line: #e8e8ea;
-  --muted: #737373;
-  --accent: #2563eb;
   --sidebar-width: 72px;
 
   min-height: 100vh;
@@ -66,7 +60,7 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  color: #8a8a8a;
+  color: var(--muted);
   text-decoration: none;
   border-radius: 10px;
   transition: background 0.2s ease, color 0.2s ease;
@@ -83,12 +77,12 @@
 .sidebar-link:hover,
 .sidebar-logout:hover {
   color: var(--ink);
-  background: #f0f0f1;
+  background: var(--paper-muted);
 }
 
 .sidebar-link.active {
   color: var(--ink);
-  background: #ececef;
+  background: var(--paper-muted);
 }
 
 .sidebar-link.active::before {
@@ -111,8 +105,8 @@
 }
 
 .sidebar-logout:hover {
-  color: #b42318;
-  background: #fef3f2;
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 .admin-main {
@@ -174,7 +168,7 @@
 }
 
 .crumb-sep {
-  color: #b0b0b0;
+  color: var(--muted);
 }
 
 .crumb-current {
@@ -200,14 +194,14 @@
   padding: 0.55rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #f7f7f8;
+  background: var(--paper-muted);
 }
 
 .navbar-search svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  fill: #9a9a9a;
+  fill: var(--muted);
 }
 
 .navbar-search input {
@@ -222,7 +216,7 @@
 }
 
 .navbar-search input::placeholder {
-  color: #a3a3a3;
+  color: var(--muted);
 }
 
 .navbar-search-mobile {
@@ -242,7 +236,7 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #6b6b6b;
+  color: var(--muted);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
@@ -254,7 +248,7 @@
 }
 
 .icon-btn:hover {
-  background: #efefef;
+  background: var(--paper-muted);
   color: var(--ink);
 }
 
@@ -273,7 +267,7 @@
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: #ececef;
+  background: var(--paper-muted);
   color: var(--ink);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.85rem;
@@ -282,7 +276,7 @@
 }
 
 .profile-btn:hover .profile-avatar {
-  background: #e0e0e3;
+  background: var(--line);
 }
 
 .admin-content {
@@ -510,7 +504,7 @@
     min-height: 3.1rem;
     padding: 0.3rem 0.2rem;
     border-radius: 10px;
-    color: #8a8a8a;
+    color: var(--muted);
     text-decoration: none;
     font-family: 'Manrope', system-ui, sans-serif;
     font-size: 0.68rem;
@@ -525,7 +519,7 @@
 
   .mobile-nav-link.active {
     color: var(--ink);
-    background: #ececef;
+    background: var(--paper-muted);
   }
 
   .mobile-nav-avatar {
@@ -534,7 +528,7 @@
     width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: #d9d9dc;
+    background: var(--line);
     color: var(--ink);
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-size: 0.65rem;
@@ -543,7 +537,7 @@
 
   .mobile-nav-link.active .mobile-nav-avatar {
     background: var(--ink);
-    color: #fff;
+    color: var(--paper);
   }
 
   /* Keep hamburger for labeled drawer, but bottom nav is primary */

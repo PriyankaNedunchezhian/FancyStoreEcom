@@ -1,30 +1,35 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { login, resetPassword } from '../firebase/auth';
+import { login, resetPassword } from '../supabase/auth';
 import { useAuth } from '../context/AuthContext';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import './Login.css';
 
-function getAuthErrorMessage(code, mode) {
-  switch (code) {
-    case 'auth/invalid-credential':
-    case 'auth/wrong-password':
-    case 'auth/user-not-found':
-      return mode === 'reset'
-        ? 'No account found with this email.'
-        : 'Invalid email or password.';
-    case 'auth/invalid-email':
-      return 'Please enter a valid email address.';
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Try again later.';
-    case 'auth/network-request-failed':
-      return 'Network error. Check your connection.';
-    case 'auth/missing-email':
-      return 'Please enter your email address.';
-    default:
-      return mode === 'reset'
-        ? 'Could not send reset email. Please try again.'
-        : 'Login failed. Please try again.';
+function getAuthErrorMessage(err, mode) {
+  const message = (err?.message || '').toLowerCase();
+  const code = (err?.code || '').toLowerCase();
+
+  if (
+    code.includes('invalid') ||
+    message.includes('invalid login') ||
+    message.includes('invalid credentials')
+  ) {
+    return mode === 'reset'
+      ? 'No account found with this email.'
+      : 'Invalid email or password.';
   }
+  if (message.includes('email') && message.includes('valid')) {
+    return 'Please enter a valid email address.';
+  }
+  if (message.includes('rate') || message.includes('too many')) {
+    return 'Too many attempts. Try again later.';
+  }
+  if (message.includes('network') || message.includes('fetch')) {
+    return 'Network error. Check your connection.';
+  }
+  return mode === 'reset'
+    ? 'Could not send reset email. Please try again.'
+    : 'Login failed. Please try again.';
 }
 
 export default function Login() {
@@ -65,7 +70,7 @@ export default function Login() {
       await login(email.trim(), password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(getAuthErrorMessage(err.code, 'login'));
+      setError(getAuthErrorMessage(err, 'login'));
     } finally {
       setLoading(false);
     }
@@ -80,7 +85,7 @@ export default function Login() {
       await resetPassword(email.trim());
       setSuccess('Password reset email sent. Check your inbox.');
     } catch (err) {
-      setError(getAuthErrorMessage(err.code, 'reset'));
+      setError(getAuthErrorMessage(err, 'reset'));
     } finally {
       setLoading(false);
     }
@@ -107,6 +112,9 @@ export default function Login() {
       </section>
 
       <section className="login-form-side">
+        <div className="login-theme-bar">
+          <ThemeSwitcher />
+        </div>
         <div className="login-panel" key={mode}>
           <p className="login-kicker">{isReset ? 'Account recovery' : 'Welcome back'}</p>
           <h1>{isReset ? 'Reset password' : 'Sign in'}</h1>

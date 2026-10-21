@@ -1,13 +1,4 @@
 .login-page {
-  --ink: #0a0a0a;
-  --ink-soft: #1a1a1a;
-  --paper: #ffffff;
-  --paper-muted: #f5f5f5;
-  --line: #e5e5e5;
-  --muted: #6b6b6b;
-  --danger: #b42318;
-  --ok: #067647;
-
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
@@ -84,11 +75,24 @@
 }
 
 .login-form-side {
+  position: relative;
   display: grid;
   place-items: center;
   padding: clamp(1.25rem, 4vw, 3rem);
   background:
-    linear-gradient(180deg, #fafafa 0%, #ffffff 40%, #ffffff 100%);
+    linear-gradient(
+      180deg,
+      var(--surface) 0%,
+      var(--paper) 40%,
+      var(--paper) 100%
+    );
+}
+
+.login-theme-bar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
 }
 
 .login-panel {
