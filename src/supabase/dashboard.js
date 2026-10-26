@@ -89,12 +89,88 @@ export function recentOrders(orders, limit = 8) {
     .slice(0, limit);
 }
 
+function startOfLocalDay(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function localDayKey(date) {
+  const d = startOfLocalDay(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+export function ordersRevenueByDay(orders, days = 7, from = new Date()) {
+  const end = startOfLocalDay(from);
+  const buckets = [];
+
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const day = new Date(end.getTime() - i * MS_DAY);
+    const key = localDayKey(day);
+    buckets.push({
+      key,
+      dayLabel: day.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+      }),
+      orders: 0,
+      revenue: 0,
+    });
+  }
+
+  const byKey = new Map(buckets.map((b) => [b.key, b]));
+
+  for (const order of orders || []) {
+    if (!order.createdAt) continue;
+    const created = new Date(order.createdAt);
+    if (Number.isNaN(created.getTime())) continue;
+    const key = localDayKey(created);
+    const bucket = byKey.get(key);
+    if (!bucket) continue;
+    bucket.orders += 1;
+    if (order.status !== 'Cancelled') {
+      bucket.revenue += Number(order.total) || 0;
+    }
+  }
+
+  return buckets.map(({ dayLabel, orders: orderCount, revenue }) => ({
+    dayLabel,
+    orders: orderCount,
+    revenue,
+  }));
+}
+
+export function statusChartData(statusCounts) {
+  return ORDER_STATUSES.map((name) => ({
+    name,
+    value: Number(statusCounts?.[name]) || 0,
+  }));
+}
+
+export function productsByCategory(products) {
+  const counts = new Map();
+  for (const product of products || []) {
+    const raw = String(product.category || '').trim();
+    const category = raw || 'Uncategorized';
+    counts.set(category, (counts.get(category) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category));
+}
+
 export function buildDashboardMetrics({ orders, products, wishlist }) {
   const last7 = ordersInLastDays(orders, 7);
   const statusCounts = countByStatus(orders);
   const inventory = inventoryHealth(products);
   const wishlistTop = topWishlist(wishlist, 5);
   const wishlistSaves = totalWishlistSaves(wishlist);
+  const trend = ordersRevenueByDay(orders, 7);
+  const status = statusChartData(statusCounts);
+  const categories = productsByCategory(products);
 
   return {
     kpis: {
@@ -108,5 +184,10 @@ export function buildDashboardMetrics({ orders, products, wishlist }) {
     wishlistTop,
     recent: recentOrders(orders, 8),
     pipelineMax: Math.max(1, ...ORDER_STATUSES.map((s) => statusCounts[s] || 0)),
+    charts: {
+      trend,
+      status,
+      categories,
+    },
   };
 }

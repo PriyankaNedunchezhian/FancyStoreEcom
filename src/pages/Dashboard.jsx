@@ -6,8 +6,24 @@ import {
   Package,
   ShoppingBag,
 } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
+  Line,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { useTheme } from '../context/ThemeContext';
 import { buildDashboardMetrics } from '../supabase/dashboard';
-import { getOrders, ORDER_STATUSES } from '../supabase/orders';
+import { getOrders } from '../supabase/orders';
 import { getProducts } from '../supabase/products';
 import { getWishlistOverview } from '../supabase/wishlist';
 import './Products.css';
@@ -39,12 +55,63 @@ function statusClass(status) {
     .replace(/\s+/g, '-');
 }
 
+function readThemeColors() {
+  const styles = getComputedStyle(document.documentElement);
+  const get = (name, fallback) =>
+    styles.getPropertyValue(name).trim() || fallback;
+  return {
+    ink: get('--ink', '#0a0a0a'),
+    muted: get('--muted', '#737373'),
+    line: get('--line', '#e8e8ea'),
+    paper: get('--paper', '#ffffff'),
+    accent: get('--accent', '#2563eb'),
+    ok: get('--ok', '#067647'),
+    danger: get('--danger', '#b42318'),
+    info: get('--info', '#175cd3'),
+  };
+}
+
+const STATUS_COLOR_KEYS = {
+  Pending: 'muted',
+  Confirmed: 'info',
+  Shipped: 'accent',
+  Delivered: 'ok',
+  Cancelled: 'danger',
+};
+
+function ChartTooltip({ active, payload, label, moneyKeys = [] }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="dash-chart-tooltip">
+      {label ? <p className="dash-chart-tooltip-label">{label}</p> : null}
+      <ul>
+        {payload.map((entry) => {
+          const key = entry.dataKey || entry.name;
+          const isMoney = moneyKeys.includes(key);
+          const value = isMoney
+            ? formatMoney(entry.value)
+            : Number(entry.value).toLocaleString('en-IN');
+          return (
+            <li key={`${entry.name}-${key}`}>
+              <span style={{ color: entry.color }}>{entry.name}</span>
+              <strong>{value}</strong>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export default function Dashboard() {
+  const { theme } = useTheme();
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const colors = useMemo(() => readThemeColors(), [theme]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,6 +142,21 @@ export default function Dashboard() {
   const metrics = useMemo(
     () => buildDashboardMetrics({ orders, products, wishlist }),
     [orders, products, wishlist],
+  );
+
+  const trendHasData = metrics.charts.trend.some(
+    (d) => d.orders > 0 || d.revenue > 0,
+  );
+  const statusHasData = metrics.charts.status.some((d) => d.value > 0);
+  const categoryHasData = metrics.charts.categories.some((d) => d.count > 0);
+
+  const statusColors = useMemo(
+    () =>
+      metrics.charts.status.map((row) => {
+        const key = STATUS_COLOR_KEYS[row.name] || 'accent';
+        return colors[key];
+      }),
+    [metrics.charts.status, colors],
   );
 
   if (loading) {
@@ -134,44 +216,171 @@ export default function Dashboard() {
         </article>
       </section>
 
-      <section className="dash-split">
-        <article className="products-card dash-panel">
+      <section className="dash-charts" aria-label="Charts">
+        <article className="products-card dash-panel dash-chart-wide">
           <div className="dash-panel-head">
-            <h2>Order pipeline</h2>
+            <h2>Orders & revenue (7d)</h2>
             <Link to="/orders" className="dash-link">
               View orders
             </Link>
           </div>
-          <ul className="dash-pipeline">
-            {ORDER_STATUSES.map((status) => {
-              const count = metrics.statusCounts[status] || 0;
-              const pct = Math.round(
-                (count / metrics.pipelineMax) * 100,
-              );
-              return (
-                <li key={status} className="dash-pipeline-row">
-                  <div className="dash-pipeline-meta">
-                    <span
-                      className={`products-badge orders-badge ${statusClass(status)}`}
-                    >
-                      {status}
-                    </span>
-                    <strong>{count}</strong>
-                  </div>
-                  <div
-                    className="dash-bar-track"
-                    role="presentation"
-                    aria-hidden="true"
+          {!trendHasData ? (
+            <p className="dash-empty">No order activity in the last 7 days.</p>
+          ) : (
+            <div className="dash-chart-frame">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={metrics.charts.trend}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid stroke={colors.line} strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="dayLabel"
+                    tick={{ fill: colors.muted, fontSize: 11 }}
+                    axisLine={{ stroke: colors.line }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    yAxisId="orders"
+                    allowDecimals={false}
+                    tick={{ fill: colors.muted, fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={28}
+                  />
+                  <YAxis
+                    yAxisId="revenue"
+                    orientation="right"
+                    tick={{ fill: colors.muted, fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
+                    tickFormatter={(v) =>
+                      v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)
+                    }
+                  />
+                  <Tooltip
+                    content={<ChartTooltip moneyKeys={['revenue']} />}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, color: colors.muted }}
+                  />
+                  <Bar
+                    yAxisId="orders"
+                    dataKey="orders"
+                    name="Orders"
+                    fill={colors.accent}
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={28}
+                  />
+                  <Line
+                    yAxisId="revenue"
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke={colors.ok}
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: colors.ok }}
+                    activeDot={{ r: 4 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </article>
+
+        <article className="products-card dash-panel">
+          <div className="dash-panel-head">
+            <h2>Order status mix</h2>
+            <Link to="/orders" className="dash-link">
+              View orders
+            </Link>
+          </div>
+          {!statusHasData ? (
+            <p className="dash-empty">No orders to chart yet.</p>
+          ) : (
+            <div className="dash-chart-frame dash-chart-frame-sm">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.charts.status}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="55%"
+                    outerRadius="78%"
+                    paddingAngle={2}
+                    stroke={colors.paper}
                   >
-                    <div
-                      className={`dash-bar-fill status-${statusClass(status)}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    {metrics.charts.status.map((entry, index) => (
+                      <Cell
+                        key={entry.name}
+                        fill={statusColors[index]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltip />} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    wrapperStyle={{ fontSize: 11, color: colors.muted }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </article>
+      </section>
+
+      <section className="dash-split">
+        <article className="products-card dash-panel">
+          <div className="dash-panel-head">
+            <h2>Catalog by category</h2>
+            <Link to="/products" className="dash-link">
+              View products
+            </Link>
+          </div>
+          {!categoryHasData ? (
+            <p className="dash-empty">No products in catalog.</p>
+          ) : (
+            <div className="dash-chart-frame">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={metrics.charts.categories.slice(0, 8)}
+                  margin={{ top: 4, right: 12, left: 4, bottom: 4 }}
+                >
+                  <CartesianGrid
+                    stroke={colors.line}
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    tick={{ fill: colors.muted, fontSize: 11 }}
+                    axisLine={{ stroke: colors.line }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="category"
+                    width={88}
+                    tick={{ fill: colors.muted, fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Bar
+                    dataKey="count"
+                    name="Products"
+                    fill={colors.info}
+                    radius={[0, 3, 3, 0]}
+                    maxBarSize={18}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </article>
 
         <article className="products-card dash-panel">
