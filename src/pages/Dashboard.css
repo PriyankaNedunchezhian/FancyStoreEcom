@@ -1,0 +1,283 @@
+.dash-page {
+  gap: 0.85rem;
+}
+
+.dash-kpi-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 900px) {
+  .dash-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dash-kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  margin: 0;
+}
+
+.dash-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-muted);
+  color: var(--accent);
+}
+
+.dash-kpi-body {
+  min-width: 0;
+}
+
+.dash-kpi-label {
+  margin: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dash-kpi-value {
+  margin: 0.2rem 0 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.dash-split {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .dash-split {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+.dash-panel {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dash-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dash-panel-head h2 {
+  margin: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.dash-link {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.dash-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dash-pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dash-pipeline-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.dash-pipeline-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dash-pipeline-meta strong {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dash-bar-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--paper-muted);
+  overflow: hidden;
+}
+
+.dash-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  min-width: 0;
+  transition: width 0.25s ease;
+}
+
+.dash-bar-fill.status-pending {
+  background: var(--muted);
+}
+
+.dash-bar-fill.status-confirmed {
+  background: var(--info);
+}
+
+.dash-bar-fill.status-shipped {
+  background: var(--accent);
+}
+
+.dash-bar-fill.status-delivered {
+  background: var(--ok);
+}
+
+.dash-bar-fill.status-cancelled {
+  background: var(--danger);
+}
+
+.dash-stat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.dash-stat-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+}
+
+.dash-stat-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dash-stat-list span {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.dash-stat-list strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.dash-warn {
+  color: var(--danger) !important;
+}
+
+.dash-wishlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dash-wishlist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.dash-wishlist-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dash-wishlist-product {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.dash-wishlist-copy {
+  min-width: 0;
+}
+
+.dash-wishlist-copy .products-name {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.dash-muted {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.dash-wishlist-count {
+  flex-shrink: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 1.5rem;
+  text-align: right;
+}
+
+.dash-empty {
+  margin: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dash-table {
+  min-width: 520px;
+}
+
+.dash-order-link {
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.dash-order-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
