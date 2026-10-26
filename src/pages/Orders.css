@@ -1,0 +1,204 @@
+.orders-badge.pending {
+  background: var(--paper-muted);
+  color: var(--muted);
+}
+
+.orders-badge.confirmed {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.orders-badge.shipped {
+  background: #eef4ff;
+  color: #2f5bb8;
+}
+
+.orders-badge.delivered {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.orders-badge.cancelled {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.orders-badge.unpaid {
+  background: var(--paper-muted);
+  color: var(--muted);
+}
+
+.orders-badge.paid {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.orders-badge.refunded {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.order-detail-page,
+.order-form-page {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.order-detail-top,
+.order-form-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.order-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.order-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.order-detail-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .order-detail-grid {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+
+.order-info-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.order-info-list div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.order-info-list dt {
+  margin: 0;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.order-info-list dd {
+  margin: 0;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.order-totals {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+.order-totals-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.92rem;
+}
+
+.order-totals-row.grand {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.order-line-builder {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.order-line-add {
+  display: grid;
+  gap: 0.65rem;
+}
+
+@media (min-width: 720px) {
+  .order-line-add {
+    grid-template-columns: minmax(0, 1fr) 100px auto;
+    align-items: end;
+  }
+}
+
+.order-line-add label {
+  display: grid;
+  gap: 0.35rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.order-line-add select,
+.order-line-add input,
+.order-form-page input,
+.order-form-page select,
+.order-form-page textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0.75rem 0.85rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.92rem;
+}
+
+.order-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .order-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .order-form-grid .full {
+    grid-column: 1 / -1;
+  }
+}
+
+.order-form-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.order-form-field span {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.order-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

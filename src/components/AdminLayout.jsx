@@ -61,6 +61,10 @@ const pageMeta = {
     title: 'Add product',
     subtitle: 'Create a new catalog item with pricing and inventory.',
   },
+  '/orders/new': {
+    title: 'Add order',
+    subtitle: 'Create a manual customer order with line items.',
+  },
 };
 
 function getActivePage(pathname) {
@@ -76,6 +80,24 @@ function getActivePage(pathname) {
     return {
       title: 'Edit product',
       subtitle: 'Update catalog details, pricing, and stock.',
+    };
+  }
+
+  if (pathname === '/orders/new') {
+    return pageMeta['/orders/new'];
+  }
+
+  if (/^\/orders\/[^/]+\/edit$/.test(pathname)) {
+    return {
+      title: 'Edit order',
+      subtitle: 'Update customer details and line items.',
+    };
+  }
+
+  if (/^\/orders\/[^/]+$/.test(pathname)) {
+    return {
+      title: 'Order detail',
+      subtitle: 'Review items and move the order through fulfillment.',
     };
   }
 
