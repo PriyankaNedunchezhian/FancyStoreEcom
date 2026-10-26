@@ -8,14 +8,20 @@
 }
 
 .login-brand-side {
+  /* Always a dark brand panel — do not use --ink/--paper (they invert in midnight). */
+  --login-brand-bg: #0a0a0a;
+  --login-brand-fg: #f5f5f5;
+  --login-brand-muted: rgba(255, 255, 255, 0.55);
+  --login-brand-faint: rgba(255, 255, 255, 0.4);
+
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: clamp(1.5rem, 5vw, 4rem);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--login-brand-bg);
+  color: var(--login-brand-fg);
   animation: brandIn 0.7s ease both;
 }
 
@@ -60,7 +66,7 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--login-brand-muted);
 }
 
 .login-copyright {
@@ -71,7 +77,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--login-brand-faint);
 }
 
 .login-form-side {
@@ -86,6 +92,18 @@
       var(--paper) 40%,
       var(--paper) 100%
     );
+}
+
+/* Stronger field edges when form sits on dark paper (midnight). */
+[data-theme='midnight'] .login-form-side .of-input,
+[data-theme='midnight'] .login-form-side .of-textarea,
+[data-theme='midnight'] .login-form-side .of-select-trigger {
+  border-color: #3f3f46;
+  background: var(--paper-muted);
+}
+
+[data-theme='midnight'] .login-form-side .of-label {
+  background: var(--paper-muted);
 }
 
 .login-theme-bar {
