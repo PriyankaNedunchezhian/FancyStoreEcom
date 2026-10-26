@@ -263,7 +263,7 @@ export default function Orders() {
           aria-label={seeding ? 'Loading sample…' : 'Load sample data'}
           onClick={handleSeedDemo}
         >
-          <Database size={22} strokeWidth={2.25} aria-hidden="true" />
+          <Database size={16} strokeWidth={2.25} aria-hidden="true" />
         </button>
         <Link
           to="/orders/new"
@@ -271,7 +271,7 @@ export default function Orders() {
           title="Add order"
           aria-label="Add order"
         >
-          <Plus size={22} strokeWidth={2.25} aria-hidden="true" />
+          <Plus size={16} strokeWidth={2.25} aria-hidden="true" />
         </Link>
       </DataTableToolbar>
 
@@ -377,7 +377,7 @@ export default function Orders() {
                           title="View"
                           aria-label={`View order ${order.orderId}`}
                         >
-                          <Eye size={20} strokeWidth={2.25} aria-hidden="true" />
+                          <Eye size={15} strokeWidth={2.25} aria-hidden="true" />
                         </Link>
                         {canEditOrder(order) ? (
                           <Link
@@ -387,7 +387,7 @@ export default function Orders() {
                             aria-label={`Edit order ${order.orderId}`}
                           >
                             <Pencil
-                              size={20}
+                              size={15}
                               strokeWidth={2.25}
                               aria-hidden="true"
                             />
@@ -402,7 +402,7 @@ export default function Orders() {
                             onClick={() => setDeleteTarget(order)}
                           >
                             <Trash2
-                              size={20}
+                              size={15}
                               strokeWidth={2.25}
                               aria-hidden="true"
                             />

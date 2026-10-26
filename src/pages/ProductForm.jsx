@@ -12,6 +12,9 @@ import {
   updateProduct,
   uploadProductImage,
 } from '../supabase/products';
+import OutlinedTextField from '../components/form/OutlinedTextField';
+import OutlinedSelect from '../components/form/OutlinedSelect';
+import OutlinedTextarea from '../components/form/OutlinedTextarea';
 import './Products.css';
 
 const emptyForm = {
@@ -40,16 +43,6 @@ function makeImageEntry({ url = '', file = null } = {}) {
     file,
     previewUrl: file ? URL.createObjectURL(file) : url,
   };
-}
-
-function Field({ label, hint, className = '', children }) {
-  return (
-    <label className={`pf-field ${className}`.trim()}>
-      <span className="pf-label">{label}</span>
-      {children}
-      {hint ? <span className="product-form-hint">{hint}</span> : null}
-    </label>
-  );
 }
 
 export default function ProductForm() {
@@ -456,45 +449,35 @@ export default function ProductForm() {
                 <p>Name, category, and how the product is described.</p>
               </div>
               <div className="product-form-grid">
-                <Field label="Product name *" className="full">
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => updateField('name', e.target.value)}
-                    placeholder="e.g. Gold-plated hoop earrings"
-                    required
-                  />
-                </Field>
+                <OutlinedTextField
+                  className="full"
+                  label="Product name"
+                  value={form.name}
+                  onChange={(e) => updateField('name', e.target.value)}
+                  required
+                />
 
-                <Field label="Category type *">
-                  <select
-                    value={form.category}
-                    onChange={(e) => updateField('category', e.target.value)}
-                  >
-                    {PRODUCT_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                <OutlinedSelect
+                  label="Category type"
+                  value={form.category}
+                  onChange={(e) => updateField('category', e.target.value)}
+                  options={PRODUCT_CATEGORIES}
+                  required
+                />
 
-                <Field label="Brand">
-                  <input
-                    type="text"
-                    value={form.brand}
-                    onChange={(e) => updateField('brand', e.target.value)}
-                    placeholder="e.g. Fancy Store"
-                  />
-                </Field>
+                <OutlinedTextField
+                  label="Brand"
+                  value={form.brand}
+                  onChange={(e) => updateField('brand', e.target.value)}
+                />
 
-                <Field label="Product description" className="full">
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => updateField('description', e.target.value)}
-                    placeholder="Short description for the catalog…"
-                  />
-                </Field>
+                <OutlinedTextarea
+                  className="full"
+                  label="Product description"
+                  value={form.description}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  rows={3}
+                />
               </div>
             </section>
 
@@ -504,38 +487,26 @@ export default function ProductForm() {
                 <p>Physical attributes customers care about.</p>
               </div>
               <div className="product-form-grid">
-                <Field label="Size">
-                  <input
-                    type="text"
-                    value={form.size}
-                    onChange={(e) => updateField('size', e.target.value)}
-                    placeholder="e.g. Free size, 2.4"
-                  />
-                </Field>
-                <Field label="Colour">
-                  <input
-                    type="text"
-                    value={form.colour}
-                    onChange={(e) => updateField('colour', e.target.value)}
-                    placeholder="e.g. Rose gold"
-                  />
-                </Field>
-                <Field label="Material">
-                  <input
-                    type="text"
-                    value={form.material}
-                    onChange={(e) => updateField('material', e.target.value)}
-                    placeholder="e.g. Alloy, Sterling silver"
-                  />
-                </Field>
-                <Field label="Weight">
-                  <input
-                    type="text"
-                    value={form.weight}
-                    onChange={(e) => updateField('weight', e.target.value)}
-                    placeholder="e.g. 12 g"
-                  />
-                </Field>
+                <OutlinedTextField
+                  label="Size"
+                  value={form.size}
+                  onChange={(e) => updateField('size', e.target.value)}
+                />
+                <OutlinedTextField
+                  label="Colour"
+                  value={form.colour}
+                  onChange={(e) => updateField('colour', e.target.value)}
+                />
+                <OutlinedTextField
+                  label="Material"
+                  value={form.material}
+                  onChange={(e) => updateField('material', e.target.value)}
+                />
+                <OutlinedTextField
+                  label="Weight"
+                  value={form.weight}
+                  onChange={(e) => updateField('weight', e.target.value)}
+                />
               </div>
             </section>
 
@@ -545,40 +516,35 @@ export default function ProductForm() {
                   <h2>Pricing</h2>
                   <p>MRP, selling price, and auto discount.</p>
                 </div>
-                <div className="pf-discount-chip">
-                  <span>Discount</span>
+                <div
+                  className={`pf-discount-chip${discount <= 0 ? ' is-zero' : ''}`}
+                  aria-live="polite"
+                >
+                  <span>Off</span>
                   <strong>{discount.toFixed(1)}%</strong>
                 </div>
               </div>
               <div className="product-form-grid pf-pricing-grid">
-                <Field label="MRP *">
-                  <div className="pf-input-affix">
-                    <span>₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.mrp}
-                      onChange={(e) => updateField('mrp', e.target.value)}
-                      required
-                    />
-                  </div>
-                </Field>
-                <Field label="Selling price *">
-                  <div className="pf-input-affix">
-                    <span>₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.sellingPrice}
-                      onChange={(e) =>
-                        updateField('sellingPrice', e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                </Field>
+                <OutlinedTextField
+                  label="MRP"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.mrp}
+                  onChange={(e) => updateField('mrp', e.target.value)}
+                  required
+                  startAdornment={<span>₹</span>}
+                />
+                <OutlinedTextField
+                  label="Selling price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.sellingPrice}
+                  onChange={(e) => updateField('sellingPrice', e.target.value)}
+                  required
+                  startAdornment={<span>₹</span>}
+                />
               </div>
               {savings > 0 ? (
                 <p className="pf-savings">
@@ -602,58 +568,37 @@ export default function ProductForm() {
                 <p>Stock, returns, and catalog visibility.</p>
               </div>
               <div className="product-form-grid">
-                <Field label="Available quantity *">
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.availableQuantity}
-                    onChange={(e) =>
-                      updateField('availableQuantity', e.target.value)
-                    }
-                    required
-                  />
-                </Field>
-                <Field label="Stock status">
-                  <select
-                    value={form.stockStatus}
-                    onChange={(e) => updateField('stockStatus', e.target.value)}
-                  >
-                    {STOCK_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Return eligibility">
-                  <select
-                    value={form.returnEligibility}
-                    onChange={(e) =>
-                      updateField('returnEligibility', e.target.value)
-                    }
-                  >
-                    {RETURN_ELIGIBILITIES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Product status">
-                  <select
-                    value={form.productStatus}
-                    onChange={(e) =>
-                      updateField('productStatus', e.target.value)
-                    }
-                  >
-                    {PRODUCT_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                <OutlinedTextField
+                  label="Available quantity"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.availableQuantity}
+                  onChange={(e) =>
+                    updateField('availableQuantity', e.target.value)
+                  }
+                  required
+                />
+                <OutlinedSelect
+                  label="Stock status"
+                  value={form.stockStatus}
+                  onChange={(e) => updateField('stockStatus', e.target.value)}
+                  options={STOCK_STATUSES}
+                />
+                <OutlinedSelect
+                  label="Return eligibility"
+                  value={form.returnEligibility}
+                  onChange={(e) =>
+                    updateField('returnEligibility', e.target.value)
+                  }
+                  options={RETURN_ELIGIBILITIES}
+                />
+                <OutlinedSelect
+                  label="Product status"
+                  value={form.productStatus}
+                  onChange={(e) => updateField('productStatus', e.target.value)}
+                  options={PRODUCT_STATUSES}
+                />
               </div>
             </section>
           </div>

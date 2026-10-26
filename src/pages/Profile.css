@@ -8,9 +8,9 @@
 .profile-card {
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: clamp(1rem, 3vw, 1.35rem) clamp(1rem, 3vw, 1.4rem)
-    clamp(1.15rem, 3vw, 1.5rem);
+  border-radius: 10px;
+  padding: clamp(0.75rem, 2.5vw, 1.1rem) clamp(0.85rem, 2.5vw, 1.15rem)
+    clamp(0.9rem, 2.5vw, 1.2rem);
 }
 
 .profile-card-head {
@@ -23,32 +23,32 @@
 .profile-page-avatar {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   background: var(--ink);
   color: var(--paper);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 1.1rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.9rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .profile-card-head h2 {
   margin: 0;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.92rem, 2.2vw, 1rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
 .profile-card-head p {
-  margin: 0.25rem 0 0;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: clamp(0.84rem, 2.2vw, 0.9rem);
+  margin: 0.2rem 0 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.75rem, 2vw, 0.8rem);
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .profile-meta {
@@ -70,8 +70,8 @@
 }
 
 .profile-meta dt {
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 0.78rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -80,15 +80,15 @@
 
 .profile-meta dd {
   margin: 0;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: clamp(0.9rem, 2.4vw, 0.98rem);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.8rem, 2vw, 0.85rem);
   font-weight: 600;
   color: var(--ink);
   word-break: break-all;
 }
 
 .profile-meta .mono {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
@@ -96,57 +96,33 @@
   margin-top: 1.25rem;
   width: 100%;
   max-width: 220px;
-  border: 1px solid var(--danger-line);
-  border-radius: 0;
-  background: var(--paper);
-  color: var(--danger);
-  padding: 0.7rem 1rem;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 0.9rem;
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+  background: var(--danger);
+  color: #fff;
+  padding: 0.5rem 0.85rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .profile-signout:hover {
-  background: var(--danger-bg);
+  filter: brightness(1.08);
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 .profile-password-form {
   display: grid;
-  gap: 1rem;
-}
-
-.profile-password-form label {
-  display: grid;
-  gap: 0.4rem;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-
-.profile-password-form input {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  padding: 0.8rem 0.9rem;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 1rem;
-  outline: none;
-}
-
-.profile-password-form input:focus {
-  border-color: var(--ink);
-  background: var(--paper-muted);
+  gap: 1.1rem;
 }
 
 .profile-alert {
   margin: 0;
-  padding: 0.7rem 0.8rem;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 0.88rem;
+  padding: 0.5rem 0.65rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
 }
 
 .profile-alert.error {
@@ -163,21 +139,26 @@
 
 .profile-submit {
   justify-self: start;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  padding: 0.75rem 1.1rem;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.5rem 0.9rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .profile-submit:hover:not(:disabled) {
-  background: var(--paper);
-  color: var(--ink);
+  filter: brightness(1.05);
+  box-shadow: 0 2px 8px var(--shadow);
 }
 
 .profile-submit:disabled {

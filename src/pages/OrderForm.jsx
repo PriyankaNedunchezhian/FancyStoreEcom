@@ -10,6 +10,9 @@ import {
   updateOrder,
 } from '../supabase/orders';
 import { getProducts } from '../supabase/products';
+import OutlinedTextField from '../components/form/OutlinedTextField';
+import OutlinedSelect from '../components/form/OutlinedSelect';
+import OutlinedTextarea from '../components/form/OutlinedTextarea';
 import './Products.css';
 import './Orders.css';
 
@@ -232,7 +235,7 @@ export default function OrderForm() {
           title="Back"
           aria-label="Back"
         >
-          <ArrowLeft size={20} strokeWidth={2.25} aria-hidden="true" />
+          <ArrowLeft size={15} strokeWidth={2.25} aria-hidden="true" />
         </Link>
         <strong>{isEdit ? `Edit order #${id}` : 'Create order'}</strong>
       </div>
@@ -246,86 +249,58 @@ export default function OrderForm() {
             <p>Contact and delivery details.</p>
           </div>
           <div className="order-form-grid">
-            <label className="order-form-field">
-              <span>Customer name *</span>
-              <input
-                type="text"
-                value={form.customerName}
-                onChange={(e) => updateField('customerName', e.target.value)}
-                required
-              />
-            </label>
-            <label className="order-form-field">
-              <span>Phone</span>
-              <input
-                type="text"
-                value={form.customerPhone}
-                onChange={(e) => updateField('customerPhone', e.target.value)}
-              />
-            </label>
-            <label className="order-form-field">
-              <span>Email</span>
-              <input
-                type="email"
-                value={form.customerEmail}
-                onChange={(e) => updateField('customerEmail', e.target.value)}
-              />
-            </label>
-            <label className="order-form-field full">
-              <span>Shipping address</span>
-              <textarea
-                rows={3}
-                value={form.shippingAddress}
-                onChange={(e) =>
-                  updateField('shippingAddress', e.target.value)
-                }
-              />
-            </label>
-            <label className="order-form-field">
-              <span>Status</span>
-              <select
-                value={form.status}
-                onChange={(e) => updateField('status', e.target.value)}
-                disabled={isEdit}
-              >
-                {(isEdit ? ORDER_STATUSES : createStatuses).map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="order-form-field">
-              <span>Payment</span>
-              <select
-                value={form.paymentStatus}
-                onChange={(e) => updateField('paymentStatus', e.target.value)}
-              >
-                {PAYMENT_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="order-form-field">
-              <span>Discount (₹)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.discountTotal}
-                onChange={(e) => updateField('discountTotal', e.target.value)}
-              />
-            </label>
-            <label className="order-form-field full">
-              <span>Notes</span>
-              <textarea
-                rows={2}
-                value={form.notes}
-                onChange={(e) => updateField('notes', e.target.value)}
-              />
-            </label>
+            <OutlinedTextField
+              label="Customer name"
+              value={form.customerName}
+              onChange={(e) => updateField('customerName', e.target.value)}
+              required
+            />
+            <OutlinedTextField
+              label="Phone"
+              value={form.customerPhone}
+              onChange={(e) => updateField('customerPhone', e.target.value)}
+            />
+            <OutlinedTextField
+              label="Email"
+              type="email"
+              value={form.customerEmail}
+              onChange={(e) => updateField('customerEmail', e.target.value)}
+            />
+            <OutlinedTextarea
+              className="full"
+              label="Shipping address"
+              rows={3}
+              value={form.shippingAddress}
+              onChange={(e) => updateField('shippingAddress', e.target.value)}
+            />
+            <OutlinedSelect
+              label="Status"
+              value={form.status}
+              onChange={(e) => updateField('status', e.target.value)}
+              disabled={isEdit}
+              options={isEdit ? ORDER_STATUSES : createStatuses}
+            />
+            <OutlinedSelect
+              label="Payment"
+              value={form.paymentStatus}
+              onChange={(e) => updateField('paymentStatus', e.target.value)}
+              options={PAYMENT_STATUSES}
+            />
+            <OutlinedTextField
+              label="Discount (₹)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.discountTotal}
+              onChange={(e) => updateField('discountTotal', e.target.value)}
+            />
+            <OutlinedTextarea
+              className="full"
+              label="Notes"
+              rows={2}
+              value={form.notes}
+              onChange={(e) => updateField('notes', e.target.value)}
+            />
           </div>
           {isEdit ? (
             <p className="product-form-hint">
@@ -353,33 +328,29 @@ export default function OrderForm() {
               </p>
             ) : null}
             <div className="order-line-add">
-              <label>
-                Product
-                <select
-                  value={productId}
-                  onChange={(e) => setProductId(e.target.value)}
-                  disabled={stockDeducted}
-                >
-                  <option value="">Select product…</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.productId}>
-                      {product.name} — {formatMoney(product.sellingPrice)} (qty{' '}
-                      {product.availableQuantity})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Qty
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  disabled={stockDeducted}
-                />
-              </label>
+              <OutlinedSelect
+                label="Product"
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                disabled={stockDeducted}
+              >
+                <option value="">Select product…</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.productId}>
+                    {product.name} — {formatMoney(product.sellingPrice)} (qty{' '}
+                    {product.availableQuantity})
+                  </option>
+                ))}
+              </OutlinedSelect>
+              <OutlinedTextField
+                label="Qty"
+                type="number"
+                min="1"
+                step="1"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                disabled={stockDeducted}
+              />
               <button
                 type="button"
                 className="products-btn secondary dtt-icon-only"
@@ -388,7 +359,7 @@ export default function OrderForm() {
                 disabled={stockDeducted}
                 onClick={addLineItem}
               >
-                <Plus size={20} strokeWidth={2.25} aria-hidden="true" />
+                <Plus size={15} strokeWidth={2.25} aria-hidden="true" />
               </button>
             </div>
 
@@ -412,7 +383,8 @@ export default function OrderForm() {
                         <td className="products-name">{item.productName}</td>
                         <td>{formatMoney(item.unitPrice)}</td>
                         <td>
-                          <input
+                          <OutlinedTextField
+                            label="Qty"
                             type="number"
                             min="1"
                             step="1"
@@ -420,8 +392,8 @@ export default function OrderForm() {
                             onChange={(e) =>
                               updateLineQty(item.productId, e.target.value)
                             }
-                            style={{ width: '5rem' }}
                             disabled={stockDeducted}
+                            className="order-qty-field"
                           />
                         </td>
                         <td>
@@ -437,7 +409,7 @@ export default function OrderForm() {
                             onClick={() => removeLineItem(item.productId)}
                           >
                             <Trash2
-                              size={18}
+                              size={14}
                               strokeWidth={2.25}
                               aria-hidden="true"
                             />

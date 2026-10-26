@@ -9,6 +9,7 @@ import {
   updateOrderStatus,
   updatePaymentStatus,
 } from '../supabase/orders';
+import OutlinedSelect from '../components/form/OutlinedSelect';
 import './Products.css';
 import './Orders.css';
 
@@ -143,7 +144,7 @@ export default function OrderDetail() {
             title="Back to orders"
             aria-label="Back to orders"
           >
-            <ArrowLeft size={20} strokeWidth={2.25} aria-hidden="true" />
+            <ArrowLeft size={15} strokeWidth={2.25} aria-hidden="true" />
           </Link>
           <strong>Order #{order.orderId}</strong>
           <span
@@ -165,7 +166,7 @@ export default function OrderDetail() {
               title="Edit order"
               aria-label="Edit order"
             >
-              <Pencil size={20} strokeWidth={2.25} aria-hidden="true" />
+              <Pencil size={15} strokeWidth={2.25} aria-hidden="true" />
             </Link>
           ) : null}
           {nextStatuses.map((status) => (
@@ -282,17 +283,13 @@ export default function OrderDetail() {
             <div>
               <dt>Payment</dt>
               <dd>
-                <select
+                <OutlinedSelect
+                  label="Payment status"
                   value={order.paymentStatus}
                   onChange={handlePaymentChange}
                   disabled={busy || order.status === 'Cancelled'}
-                >
-                  {PAYMENT_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  options={PAYMENT_STATUSES}
+                />
               </dd>
             </div>
           </dl>

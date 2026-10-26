@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { login, resetPassword } from '../supabase/auth';
 import { useAuth } from '../context/AuthContext';
 import ThemeSwitcher from '../components/ThemeSwitcher';
+import OutlinedTextField from '../components/form/OutlinedTextField';
 import './Login.css';
 
 function getAuthErrorMessage(err, mode) {
@@ -128,23 +129,20 @@ export default function Login() {
             className="login-form"
             onSubmit={isReset ? handleReset : handleLogin}
           >
-            <label htmlFor="email">
-              Email
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="admin@fancystore.com"
-              />
-            </label>
+            <OutlinedTextField
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
 
             {!isReset ? (
               <div className="password-field">
                 <div className="password-label-row">
-                  <label htmlFor="password">Password</label>
+                  <span className="password-label-spacer" />
                   <button
                     type="button"
                     className="forgot-link"
@@ -153,14 +151,14 @@ export default function Login() {
                     Forgot password?
                   </button>
                 </div>
-                <input
+                <OutlinedTextField
                   id="password"
+                  label="Password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  placeholder="••••••••"
                 />
               </div>
             ) : null}

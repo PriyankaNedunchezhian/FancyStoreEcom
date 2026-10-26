@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { changePassword } from '../supabase/auth';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ThemeSwitcher from '../components/ThemeSwitcher';
+import OutlinedTextField from '../components/form/OutlinedTextField';
 import './Profile.css';
 
 function getPasswordErrorMessage(err) {
@@ -132,41 +133,35 @@ export default function Profile() {
         </div>
 
         <form className="profile-password-form" onSubmit={handlePasswordUpdate}>
-          <label htmlFor="current-password">
-            Current password
-            <input
-              id="current-password"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </label>
+          <OutlinedTextField
+            id="current-password"
+            label="Current password"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
-          <label htmlFor="new-password">
-            New password
-            <input
-              id="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </label>
+          <OutlinedTextField
+            id="new-password"
+            label="New password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
 
-          <label htmlFor="confirm-password">
-            Confirm new password
-            <input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </label>
+          <OutlinedTextField
+            id="confirm-password"
+            label="Confirm new password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
 
           {error ? <p className="profile-alert error" role="alert">{error}</p> : null}
           {success ? (

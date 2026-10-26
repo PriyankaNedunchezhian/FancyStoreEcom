@@ -7,6 +7,7 @@ import {
   Printer,
   Search,
 } from 'lucide-react';
+import OutlinedTextField from './form/OutlinedTextField';
 import './DataTableToolbar.css';
 
 function FileTypeIcon({ src, alt }) {
@@ -60,16 +61,16 @@ export default function DataTableToolbar({
   return (
     <div className="dtt-toolbar">
       <div className="dtt-toolbar-left">
-        <label className="dtt-search">
-          <Search size={18} strokeWidth={2.25} aria-hidden="true" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-          />
-        </label>
+        <OutlinedTextField
+          className="dtt-search-field"
+          label={searchPlaceholder}
+          type="search"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          startAdornment={
+            <Search size={14} strokeWidth={2.25} aria-hidden="true" />
+          }
+        />
         {countLabel ? <p className="dtt-count">{countLabel}</p> : null}
       </div>
 
@@ -85,7 +86,7 @@ export default function DataTableToolbar({
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <Download size={22} strokeWidth={2.25} aria-hidden="true" />
+            <Download size={16} strokeWidth={2.25} aria-hidden="true" />
           </button>
           {menuOpen ? (
             <div className="dtt-export-menu" role="menu">
@@ -125,7 +126,7 @@ export default function DataTableToolbar({
           aria-label="Print"
           onClick={() => onPrint?.()}
         >
-          <Printer size={22} strokeWidth={2.25} aria-hidden="true" />
+          <Printer size={16} strokeWidth={2.25} aria-hidden="true" />
         </button>
 
         {children}

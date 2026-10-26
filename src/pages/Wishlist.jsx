@@ -244,7 +244,7 @@ export default function Wishlist() {
           aria-label={seeding ? 'Loading sample…' : 'Load sample data'}
           onClick={handleSeedDemo}
         >
-          <Database size={22} strokeWidth={2.25} aria-hidden="true" />
+          <Database size={16} strokeWidth={2.25} aria-hidden="true" />
         </button>
       </DataTableToolbar>
 

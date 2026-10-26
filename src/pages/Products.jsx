@@ -191,7 +191,7 @@ export default function Products() {
           title="Add product"
           aria-label="Add product"
         >
-          <Plus size={22} strokeWidth={2.25} aria-hidden="true" />
+          <Plus size={16} strokeWidth={2.25} aria-hidden="true" />
         </Link>
       </DataTableToolbar>
 
@@ -329,7 +329,7 @@ export default function Products() {
                           title="Edit"
                           aria-label={`Edit ${product.name}`}
                         >
-                          <Pencil size={20} strokeWidth={2.25} aria-hidden="true" />
+                          <Pencil size={15} strokeWidth={2.25} aria-hidden="true" />
                         </Link>
                         <button
                           type="button"
@@ -338,7 +338,7 @@ export default function Products() {
                           aria-label={`Delete ${product.name}`}
                           onClick={() => setDeleteTarget(product)}
                         >
-                          <Trash2 size={20} strokeWidth={2.25} aria-hidden="true" />
+                          <Trash2 size={15} strokeWidth={2.25} aria-hidden="true" />
                         </button>
                       </div>
                     </td>
