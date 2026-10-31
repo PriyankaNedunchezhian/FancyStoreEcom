@@ -1,27 +1,36 @@
 # Kumar Fancy Store — Customer
 
-Customer storefront for Kumar Fancy Store. This is a separate Vite + React app from the admin panel at the repo root.
+Customer storefront for Kumar Fancy Store. Separate Vite + React app from the admin panel at the repo root.
 
-## Run
+For the full clone, Supabase, and dual-app setup, see the root [README.md](../README.md).
+
+## Quick start
+
+1. Copy the same Supabase keys used by admin:
 
 ```bash
-cd customer
+copy ..\.env .env
+```
+
+2. Install and run:
+
+```bash
 npm install
 npm run dev
 ```
 
-Opens at [http://localhost:5174](http://localhost:5174). The admin app stays on port 5173.
+Opens at [http://localhost:5174](http://localhost:5174). Admin stays on port **5173**.
 
 ## Routes
 
 | Path | Screen |
 |------|--------|
 | `/` | Home |
-| `/shop` | Collection, with category, search, and sort |
+| `/shop` | Collection (category, search, sort) |
 | `/product/:id` | Product detail |
 | `/cart` | Bag |
 | `/wishlist` | Saved pieces |
-| `/checkout` | Checkout form shell |
-| `/account` | Customer sign in / create account |
+| `/checkout` | Checkout form |
+| `/account` | Sign in / create account |
 
-The shop and product pages read active products from the same Supabase catalog as admin. Wishlists are saved on the signed-in customer account. Copy the admin `.env` into `customer/.env` before starting the app.
+Active products come from the shared Supabase catalog. Wishlists are stored for the signed-in user.
