@@ -1,0 +1,125 @@
+.product-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.product-visual-wrap {
+  position: relative;
+}
+
+.product-visual {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  background: #f3eee6;
+  color: #8c6a3d;
+  text-decoration: none;
+  border: 1px solid var(--line);
+}
+
+.product-visual[data-category='Earrings'] { background: #f7f0e8; }
+.product-visual[data-category='Necklace'] { background: #f3eee6; }
+.product-visual[data-category='Bangles'] { background: #f6f1e4; }
+.product-visual[data-category='Ring'] { background: #f4eee9; }
+.product-visual[data-category='Bracelet'] { background: #f1eee8; }
+.product-visual[data-category='Chain'] { background: #f5f0e6; }
+
+.product-visual svg {
+  width: 42%;
+  height: 42%;
+}
+
+.product-visual.has-photo {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: #fff;
+}
+
+.product-visual.has-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wish {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.wish.on {
+  color: var(--sale);
+  border-color: #e7c8c2;
+}
+
+.stock-pill {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 8px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 2px 0;
+  flex: 1;
+}
+
+.product-category {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-body h3 {
+  margin: 0;
+  font-family: Poppins, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.product-body h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-body h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.product-body .price {
+  margin: 4px 0 10px;
+  font-size: 0.9rem;
+}
+
+.card-add {
+  margin-top: auto;
+  width: 100%;
+  min-height: 38px;
+  font-size: 0.72rem;
+}
