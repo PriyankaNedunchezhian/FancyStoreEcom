@@ -52,9 +52,15 @@ cd FancyStoreEcom
    - Row Level Security policies
 4. Run [`supabase/customer_public_products.sql`](supabase/customer_public_products.sql) once so the customer shop can read **Active** products without an admin session.
 5. Run [`supabase/customer_orders.sql`](supabase/customer_orders.sql) once so the storefront can place COD orders (guest or signed-in) via `place_customer_order`.
-6. Create a user for admin (and for testing the customer sign-in):
-   - **Authentication → Users → Add user** (email + password), **or**
-   - Turn off **Confirm email** under **Authentication → Providers → Email** while developing, then sign up from the customer app
+6. Run [`supabase/admin_roles.sql`](supabase/admin_roles.sql) once to add `is_admin()` and lock catalog/order writes to admins.
+7. Create users:
+   - **Admin:** Authentication → Users → Add user (email + password), then open that user → **App Metadata** and set:
+     ```json
+     { "role": "admin" }
+     ```
+     Sign out and sign in again on the admin app so the JWT refreshes.
+   - **Customers:** sign up from the customer storefront. Do **not** set `app_metadata.role` to `admin` for shoppers.
+   - While developing, you can turn off **Confirm email** under Authentication → Providers → Email.
 
 Optional seeds (SQL Editor):
 
@@ -213,6 +219,7 @@ FancyStoreEcom/
 │   ├── schema.sql          # Full database setup (run first)
 │   ├── customer_public_products.sql
 │   ├── customer_orders.sql # Place-order RPC + payment_method
+│   ├── admin_roles.sql     # is_admin() + tighter RLS
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql
 ├── customer/               # Customer storefront
@@ -232,6 +239,7 @@ FancyStoreEcom/
 |---------|------------|
 | Customer shop shows no products | Run `supabase/customer_public_products.sql`, or sign in on `/account` with the admin email/password. Confirm products are **Active** in admin. |
 | Place order fails / RPC missing | Run `supabase/customer_orders.sql` in the SQL Editor, then try checkout again. |
+| Admin login says “Admin access only” | Set App Metadata `{ "role": "admin" }` on that user, run `admin_roles.sql`, then sign out/in. |
 | Guest order not in My Orders | Expected — guest orders have no account. Sign in before placing to track them. |
 | `email rate limit exceeded` on create account | Supabase free email limit. Turn off **Confirm email** in Auth settings, wait about an hour, or sign in with an existing user instead of creating a new one. |
 | Missing env / blank catalog | Check `.env` in the repo root and `customer/.env`. Restart `npm run dev` after changing env files. |

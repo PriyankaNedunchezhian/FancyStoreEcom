@@ -130,7 +130,7 @@ export default function Account() {
           </button>
         </form>
         <p className="account-foot">
-          Sign in with the same email and password as the admin page. That uses the same account, so the store can read the catalog and save wishlists.
+          Create a customer account to save a wishlist and track My Orders. Admin staff use the separate admin app with an admin role.
         </p>
       </div>
     </div>

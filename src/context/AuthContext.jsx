@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase/config';
 import { logout as supabaseLogout } from '../supabase/auth';
+import { isAdminUser } from '../supabase/roles';
 
 const AuthContext = createContext(null);
 
@@ -30,15 +31,21 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     await supabaseLogout();
-  }
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      isAdmin: isAdminUser(user),
+      logout,
+    }),
+    [user, loading, logout],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

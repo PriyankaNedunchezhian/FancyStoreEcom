@@ -11,7 +11,7 @@ alter table public.orders
 
 create index if not exists orders_customer_id_idx on public.orders (customer_id);
 
--- Own-order read for signed-in customers (admin still has full authenticated policies below)
+-- Customer own-order read. Admin CRUD is defined in admin_roles.sql / schema.sql via is_admin().
 drop policy if exists "Customers can read own orders" on public.orders;
 create policy "Customers can read own orders"
   on public.orders for select
@@ -30,57 +30,6 @@ create policy "Customers can read own order items"
         and o.customer_id = auth.uid()
     )
   );
-
--- Keep admin-style full access for authenticated users until a dedicated admin role exists
-drop policy if exists "Authenticated users can read orders" on public.orders;
-create policy "Authenticated users can read orders"
-  on public.orders for select
-  to authenticated
-  using (true);
-
-drop policy if exists "Authenticated users can insert orders" on public.orders;
-create policy "Authenticated users can insert orders"
-  on public.orders for insert
-  to authenticated
-  with check (true);
-
-drop policy if exists "Authenticated users can update orders" on public.orders;
-create policy "Authenticated users can update orders"
-  on public.orders for update
-  to authenticated
-  using (true)
-  with check (true);
-
-drop policy if exists "Authenticated users can delete orders" on public.orders;
-create policy "Authenticated users can delete orders"
-  on public.orders for delete
-  to authenticated
-  using (true);
-
-drop policy if exists "Authenticated users can read order items" on public.order_items;
-create policy "Authenticated users can read order items"
-  on public.order_items for select
-  to authenticated
-  using (true);
-
-drop policy if exists "Authenticated users can insert order items" on public.order_items;
-create policy "Authenticated users can insert order items"
-  on public.order_items for insert
-  to authenticated
-  with check (true);
-
-drop policy if exists "Authenticated users can update order items" on public.order_items;
-create policy "Authenticated users can update order items"
-  on public.order_items for update
-  to authenticated
-  using (true)
-  with check (true);
-
-drop policy if exists "Authenticated users can delete order items" on public.order_items;
-create policy "Authenticated users can delete order items"
-  on public.order_items for delete
-  to authenticated
-  using (true);
 
 create or replace function public.place_customer_order(
   p_customer jsonb,

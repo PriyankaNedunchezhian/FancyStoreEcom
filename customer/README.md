@@ -15,6 +15,7 @@ copy ..\.env .env
 2. In Supabase SQL Editor, run (once each if not already applied):
    - [`../supabase/customer_public_products.sql`](../supabase/customer_public_products.sql)
    - [`../supabase/customer_orders.sql`](../supabase/customer_orders.sql)
+   - [`../supabase/admin_roles.sql`](../supabase/admin_roles.sql) — then set admin App Metadata `{ "role": "admin" }`
 
 3. Install and run:
 

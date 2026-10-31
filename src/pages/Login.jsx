@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { login, resetPassword } from '../supabase/auth';
 import { useAuth } from '../context/AuthContext';
 import ThemeSwitcher from '../components/ThemeSwitcher';
@@ -10,6 +10,9 @@ function getAuthErrorMessage(err, mode) {
   const message = (err?.message || '').toLowerCase();
   const code = (err?.code || '').toLowerCase();
 
+  if (code === 'not_admin' || message.includes('admin access only')) {
+    return 'Admin access only. Use an admin account, or shop on the customer storefront.';
+  }
   if (
     code.includes('invalid') ||
     message.includes('invalid login') ||
@@ -34,11 +37,16 @@ function getAuthErrorMessage(err, mode) {
 }
 
 export default function Login() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const location = useLocation();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(
+    location.state?.adminOnly
+      ? 'Admin access only. Sign in with an admin account.'
+      : '',
+  );
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -51,7 +59,7 @@ export default function Login() {
     );
   }
 
-  if (user) {
+  if (user && isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 

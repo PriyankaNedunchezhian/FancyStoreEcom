@@ -1,4 +1,5 @@
 import { supabase } from './config';
+import { isAdminUser } from './roles';
 
 function asAuthError(error, fallbackCode = 'auth/unknown') {
   const err = new Error(error?.message || 'Authentication failed.');
@@ -13,6 +14,15 @@ export async function login(email, password) {
     password,
   });
   if (error) asAuthError(error, 'invalid_credentials');
+
+  if (!isAdminUser(data.user)) {
+    await supabase.auth.signOut();
+    asAuthError(
+      { message: 'Admin access only. This account is not an admin.', code: 'not_admin' },
+      'not_admin',
+    );
+  }
+
   return data;
 }
 
