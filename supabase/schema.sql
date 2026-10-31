@@ -54,6 +54,13 @@ create policy "Authenticated users can read products"
   to authenticated
   using (true);
 
+drop policy if exists "Public can read active products" on public.products;
+
+create policy "Public can read active products"
+  on public.products for select
+  to anon
+  using (product_status = 'Active');
+
 create policy "Authenticated users can insert products"
   on public.products for insert
   to authenticated
