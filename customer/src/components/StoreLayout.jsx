@@ -121,6 +121,7 @@ export default function StoreLayout() {
             </Link>
           ))}
           <Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link>
+          <Link to="/orders" onClick={() => setMenuOpen(false)}>My orders</Link>
           <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
           <Link to="/cart" onClick={() => setMenuOpen(false)}>Bag</Link>
         </div>
@@ -151,6 +152,7 @@ export default function StoreLayout() {
           <div>
             <p className="footer-label">Your store</p>
             <Link to="/account">Account</Link>
+            <Link to="/orders">My orders</Link>
             <Link to="/wishlist">Wishlist</Link>
             <Link to="/cart">Bag</Link>
             <Link to="/checkout">Checkout</Link>

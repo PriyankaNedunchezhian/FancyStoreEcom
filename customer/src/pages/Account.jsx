@@ -84,6 +84,7 @@ export default function Account() {
           <p className="lede">{user.email}</p>
           {error && <p className="form-notice">{error}</p>}
           <div className="hero-actions">
+            <Link className="btn btn-line" to="/orders">My orders</Link>
             <Link className="btn btn-line" to="/wishlist">Wishlist</Link>
             <button className="btn btn-dark" type="button" onClick={onSignOut} disabled={busy}>
               Sign out

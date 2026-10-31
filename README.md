@@ -51,7 +51,8 @@ cd FancyStoreEcom
    - Storage bucket `products` for images
    - Row Level Security policies
 4. Run [`supabase/customer_public_products.sql`](supabase/customer_public_products.sql) once so the customer shop can read **Active** products without an admin session.
-5. Create a user for admin (and for testing the customer sign-in):
+5. Run [`supabase/customer_orders.sql`](supabase/customer_orders.sql) once so the storefront can place COD orders (guest or signed-in) via `place_customer_order`.
+6. Create a user for admin (and for testing the customer sign-in):
    - **Authentication → Users → Add user** (email + password), **or**
    - Turn off **Confirm email** under **Authentication → Providers → Email** while developing, then sign up from the customer app
 
@@ -147,8 +148,13 @@ Open **http://localhost:5174**.
 | `/product/:id` | Product detail |
 | `/cart` | Bag |
 | `/wishlist` | Saved pieces (needs sign in) |
-| `/checkout` | Checkout form |
+| `/checkout` | Guest or signed-in checkout (cash on delivery) |
+| `/order/:id/confirmation` | Order placed |
+| `/orders` | My orders (signed in) |
+| `/orders/:id` | Order detail (signed in) |
 | `/account` | Sign in / create account |
+
+Checkout creates a **Pending / Unpaid** order with **cash on delivery**. Guests can place orders; sign in before checkout to see them under **My Orders**. Admin confirms stock from the Orders screen as before.
 
 Sign in on the customer account page with the **same email and password** as admin (same Supabase user) to load the catalog when public product policy is not applied yet, and to save wishlists.
 
@@ -206,6 +212,7 @@ FancyStoreEcom/
 ├── supabase/
 │   ├── schema.sql          # Full database setup (run first)
 │   ├── customer_public_products.sql
+│   ├── customer_orders.sql # Place-order RPC + payment_method
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql
 ├── customer/               # Customer storefront
@@ -224,6 +231,8 @@ FancyStoreEcom/
 | Problem | What to do |
 |---------|------------|
 | Customer shop shows no products | Run `supabase/customer_public_products.sql`, or sign in on `/account` with the admin email/password. Confirm products are **Active** in admin. |
+| Place order fails / RPC missing | Run `supabase/customer_orders.sql` in the SQL Editor, then try checkout again. |
+| Guest order not in My Orders | Expected — guest orders have no account. Sign in before placing to track them. |
 | `email rate limit exceeded` on create account | Supabase free email limit. Turn off **Confirm email** in Auth settings, wait about an hour, or sign in with an existing user instead of creating a new one. |
 | Missing env / blank catalog | Check `.env` in the repo root and `customer/.env`. Restart `npm run dev` after changing env files. |
 | Admin Vite crashes watching images on Windows | Root `vite.config.js` ignores image files in the watcher. Restart the admin server. |

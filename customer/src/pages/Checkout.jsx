@@ -1,14 +1,28 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { placeOrder } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
 
 const EMPTY = { name: '', phone: '', email: '', address: '' };
 
 export default function Checkout() {
-  const { items, subtotal } = useCart();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { items, subtotal, clear } = useCart();
   const [form, setForm] = useState(EMPTY);
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((current) => ({
+      ...current,
+      name: current.name || user.user_metadata?.full_name || '',
+      email: current.email || user.email || '',
+    }));
+  }, [user]);
 
   if (items.length === 0) {
     return (
@@ -24,13 +38,52 @@ export default function Checkout() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function onSubmit(event) {
+  async function onSubmit(event) {
     event.preventDefault();
+    setError('');
     if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
-      setNotice('Name, phone, and address are required on this form.');
+      setError('Name, phone, and address are required.');
       return;
     }
-    setNotice('Checkout layout is ready. Placing the order will be connected in the next step. Your bag is unchanged.');
+
+    setBusy(true);
+    try {
+      const orderId = await placeOrder({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        address: form.address,
+        paymentMethod: 'cod',
+        items: items.map((item) => ({
+          productId: item.id,
+          quantity: item.qty,
+        })),
+      });
+
+      const snapshot = {
+        orderId,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        address: form.address.trim(),
+        paymentMethod: 'cod',
+        subtotal,
+        total: subtotal,
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          qty: item.qty,
+          price: item.price,
+        })),
+      };
+
+      clear();
+      navigate(`/order/${orderId}/confirmation`, { replace: true, state: { order: snapshot } });
+    } catch (err) {
+      setError(err.message || 'Could not place the order.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -38,6 +91,7 @@ export default function Checkout() {
       <header className="page-intro">
         <p className="kicker">Checkout</p>
         <h1>Delivery details</h1>
+        <p>Guests can place an order. Sign in if you want it saved under My Orders.</p>
       </header>
       <div className="checkout-grid">
         <form onSubmit={onSubmit}>
@@ -57,8 +111,29 @@ export default function Checkout() {
             Address
             <textarea rows={4} value={form.address} onChange={(event) => update('address', event.target.value)} />
           </label>
-          {notice && <p className="form-notice">{notice}</p>}
-          <button className="btn btn-dark" type="submit">Place order</button>
+
+          <fieldset className="pay-methods">
+            <legend>Payment</legend>
+            <label className="pay-option on">
+              <input type="radio" name="payment" checked readOnly />
+              <span>
+                <strong>Cash on delivery</strong>
+                <small>Pay when the order arrives. Unpaid until then.</small>
+              </span>
+            </label>
+            <label className="pay-option disabled">
+              <input type="radio" name="payment" disabled />
+              <span>
+                <strong>Online payment</strong>
+                <small>Coming soon</small>
+              </span>
+            </label>
+          </fieldset>
+
+          {error && <p className="form-notice">{error}</p>}
+          <button className="btn btn-dark" type="submit" disabled={busy}>
+            {busy ? 'Placing order…' : 'Place order'}
+          </button>
         </form>
         <aside className="summary">
           <h2>Your bag</h2>
@@ -71,6 +146,7 @@ export default function Checkout() {
             ))}
           </ul>
           <p><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></p>
+          <p><span>Payment</span><strong>COD</strong></p>
         </aside>
       </div>
     </div>
