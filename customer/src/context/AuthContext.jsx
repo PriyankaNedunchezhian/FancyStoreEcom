@@ -57,7 +57,48 @@ export function AuthProvider({ children }) {
       if (error) throw error;
     }
 
-    return { user, loading, signIn, signUp, signOut };
+    async function updateProfile({ name, phone }) {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: String(name || '').trim(),
+          phone: String(phone || '').trim(),
+        },
+      });
+      if (error) throw error;
+      setUser(data.user);
+      return data.user;
+    }
+
+    async function updatePassword(currentPassword, newPassword) {
+      if (!user?.email) {
+        throw new Error('Sign in again to change your password.');
+      }
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (reauthError) {
+        const err = new Error('Current password is incorrect.');
+        err.code = 'invalid_credentials';
+        throw err;
+      }
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+      setUser(data.user);
+      return data.user;
+    }
+
+    return {
+      user,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      updateProfile,
+      updatePassword,
+    };
   }, [user, loading]);
 
   return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;

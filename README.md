@@ -55,7 +55,8 @@ cd FancyStoreEcom
 6. Run [`supabase/admin_roles.sql`](supabase/admin_roles.sql) once to add `is_admin()` and lock catalog/order writes to admins.
 7. Run [`supabase/razorpay_orders.sql`](supabase/razorpay_orders.sql) once for Razorpay columns and online checkout via `place_customer_order`.
 8. Run [`supabase/shipping_fees.sql`](supabase/shipping_fees.sql) once for flat shipping (₹79 under ₹999, free at ₹999+).
-9. Create users:
+9. Run [`supabase/customer_addresses.sql`](supabase/customer_addresses.sql) once for saved delivery addresses on the customer account page.
+10. Create users:
    - **Admin:** Authentication → Users → Add user (email + password), then open that user → **App Metadata** and set:
      ```json
      { "role": "admin" }
@@ -160,9 +161,9 @@ Open **http://localhost:5174**.
 | `/order/:id/confirmation` | Order placed |
 | `/orders` | My orders (signed in) |
 | `/orders/:id` | Order detail (signed in) |
-| `/account` | Sign in / create account |
+| `/account` | Sign in / create account, profile, saved addresses |
 
-Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). Shipping is **₹79**, or **free** when the merchandise subtotal is **₹999+** (computed in `place_customer_order`). Guests can place orders; sign in before checkout to see them under **My Orders**. Admin confirms stock from the Orders screen as before.
+Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). Shipping is **₹79**, or **free** when the merchandise subtotal is **₹999+** (computed in `place_customer_order`). Guests can place orders; signed-in shoppers can edit profile, save up to **5** addresses, and prefill checkout. Admin confirms stock from the Orders screen as before.
 
 Add the public Razorpay key to `customer/.env`:
 
@@ -270,6 +271,7 @@ FancyStoreEcom/
 │   ├── admin_roles.sql     # is_admin() + tighter RLS
 │   ├── razorpay_orders.sql # Razorpay columns + COD/online place-order
 │   ├── shipping_fees.sql   # shipping_total + ₹79 / free at ₹999+
+│   ├── customer_addresses.sql # Saved delivery addresses (max 5)
 │   ├── functions/          # Edge Functions (create/verify Razorpay)
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql

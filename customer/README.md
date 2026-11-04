@@ -18,6 +18,7 @@ copy ..\.env .env
    - [`../supabase/admin_roles.sql`](../supabase/admin_roles.sql) — then set admin App Metadata `{ "role": "admin" }`
    - [`../supabase/razorpay_orders.sql`](../supabase/razorpay_orders.sql) — for online payment
    - [`../supabase/shipping_fees.sql`](../supabase/shipping_fees.sql) — ₹79 shipping, free at ₹999+
+   - [`../supabase/customer_addresses.sql`](../supabase/customer_addresses.sql) — saved addresses
 
 3. For Razorpay, set `VITE_RAZORPAY_KEY_ID` in `.env` and deploy the Edge Functions (see root README).
 
@@ -43,6 +44,6 @@ Opens at [http://localhost:5174](http://localhost:5174). Admin stays on port **5
 | `/order/:id/confirmation` | Order placed |
 | `/orders` | My orders (signed in) |
 | `/orders/:id` | Order detail |
-| `/account` | Sign in / create account |
+| `/account` | Sign in, profile, password, saved addresses |
 
-Active products come from the shared Supabase catalog. Checkout supports **COD** (Unpaid) and **Razorpay** (Paid after verify). Shipping is **₹79**, or free at **₹999+** subtotal. Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.
+Active products come from the shared Supabase catalog. Checkout supports **COD** (Unpaid) and **Razorpay** (Paid after verify). Shipping is **₹79**, or free at **₹999+** subtotal. Signed-in shoppers can save up to 5 addresses and prefill checkout. Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.
