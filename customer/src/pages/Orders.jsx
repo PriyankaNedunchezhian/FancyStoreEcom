@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMyOrders, paymentMethodLabel } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
+import { canPayRazorpayOrder, payRazorpayOrder } from '../utils/payOrder';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -18,6 +19,8 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [payingId, setPayingId] = useState('');
+  const [payError, setPayError] = useState('');
 
   useEffect(() => {
     if (authLoading) return undefined;
@@ -50,6 +53,31 @@ export default function Orders() {
       cancelled = true;
     };
   }, [user, authLoading]);
+
+  async function onPay(order) {
+    setPayError('');
+    setPayingId(String(order.orderId));
+    try {
+      await payRazorpayOrder(order.orderId, {
+        name: order.customerName,
+        email: order.customerEmail,
+        phone: order.customerPhone,
+      });
+      setOrders((current) =>
+        current.map((row) =>
+          row.orderId === order.orderId
+            ? { ...row, paymentStatus: 'Paid' }
+            : row,
+        ),
+      );
+    } catch (err) {
+      if (err?.code !== 'payment_cancelled') {
+        setPayError(err.message || 'Could not complete payment.');
+      }
+    } finally {
+      setPayingId('');
+    }
+  }
 
   if (authLoading || loading) {
     return <p className="status-line">Loading your orders…</p>;
@@ -91,22 +119,37 @@ export default function Orders() {
         <h1>My orders</h1>
         <p>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</p>
       </header>
+      {payError && <p className="form-notice">{payError}</p>}
       <ul className="orders-list">
-        {orders.map((order) => (
-          <li key={order.id}>
-            <div>
-              <p className="orders-id">Order #{order.orderId}</p>
-              <p className="orders-meta">
-                {formatDate(order.createdAt)} · {order.status} · {order.paymentStatus} ·{' '}
-                {paymentMethodLabel(order.paymentMethod)}
-              </p>
-            </div>
-            <div className="orders-side">
-              <strong>{formatPrice(order.total)}</strong>
-              <Link className="btn btn-line" to={`/orders/${order.id}`}>View</Link>
-            </div>
-          </li>
-        ))}
+        {orders.map((order) => {
+          const canPay = canPayRazorpayOrder(order);
+          const busy = payingId === String(order.orderId);
+          return (
+            <li key={order.id}>
+              <div>
+                <p className="orders-id">Order #{order.orderId}</p>
+                <p className="orders-meta">
+                  {formatDate(order.createdAt)} · {order.status} · {order.paymentStatus} ·{' '}
+                  {paymentMethodLabel(order.paymentMethod)}
+                </p>
+              </div>
+              <div className="orders-side">
+                <strong>{formatPrice(order.total)}</strong>
+                {canPay && (
+                  <button
+                    className="btn btn-dark"
+                    type="button"
+                    disabled={Boolean(payingId)}
+                    onClick={() => onPay(order)}
+                  >
+                    {busy ? 'Opening…' : 'Pay'}
+                  </button>
+                )}
+                <Link className="btn btn-line" to={`/orders/${order.id}`}>View</Link>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

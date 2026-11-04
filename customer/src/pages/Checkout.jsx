@@ -9,9 +9,8 @@ import {
   listAddresses,
 } from '../supabase/addresses';
 import { placeOrder } from '../supabase/orders';
-import { createRazorpayOrder, verifyRazorpayPayment } from '../supabase/payments';
 import { formatPrice } from '../utils/money';
-import { openRazorpayCheckout } from '../utils/razorpay';
+import { payRazorpayOrder } from '../utils/payOrder';
 import { getOrderTotal, getShippingTotal } from '../utils/shipping';
 
 const EMPTY = { name: '', phone: '', email: '', address: '' };
@@ -205,28 +204,10 @@ export default function Checkout() {
         return;
       }
 
-      const session = await createRazorpayOrder(orderId);
-      const keyId = session.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!keyId) {
-        throw new Error('Razorpay key is missing. Set VITE_RAZORPAY_KEY_ID or function secrets.');
-      }
-
-      const payment = await openRazorpayCheckout({
-        keyId,
-        razorpayOrderId: session.razorpayOrderId,
-        amount: session.amount,
-        currency: session.currency,
-        name: session.name || form.name.trim(),
-        email: session.email || form.email.trim(),
-        phone: session.phone || form.phone.trim(),
-        description: `Order #${orderId}`,
-      });
-
-      await verifyRazorpayPayment({
-        orderId,
-        razorpayOrderId: payment.razorpay_order_id || session.razorpayOrderId,
-        razorpayPaymentId: payment.razorpay_payment_id,
-        razorpaySignature: payment.razorpay_signature,
+      await payRazorpayOrder(orderId, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
       });
 
       clear();
@@ -237,7 +218,9 @@ export default function Checkout() {
     } catch (err) {
       if (err?.code === 'payment_cancelled' && placedOrderId) {
         setError(
-          `Order #${placedOrderId} was created but payment was not completed. You can pay from My Orders later, or contact the store.`,
+          user
+            ? `Order #${placedOrderId} is saved as Unpaid. Open My Orders and tap Pay when you are ready.`
+            : `Order #${placedOrderId} was created but payment was not completed. Sign in before checkout next time so you can pay from My Orders, or contact the store.`,
         );
       } else {
         setError(err.message || 'Could not place the order.');

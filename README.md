@@ -163,7 +163,7 @@ Open **http://localhost:5174**.
 | `/orders/:id` | Order detail (signed in) |
 | `/account` | Sign in / create account, profile, saved addresses |
 
-Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). Shipping is **₹79**, or **free** when the merchandise subtotal is **₹999+** (computed in `place_customer_order`). Guests can place orders; signed-in shoppers can edit profile, save up to **5** addresses, and prefill checkout. Admin confirms stock from the Orders screen as before.
+Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). If Razorpay is closed before paying, signed-in shoppers can finish payment from **My Orders** / order detail (**Pay**). Shipping is **₹79**, or **free** when the merchandise subtotal is **₹999+** (computed in `place_customer_order`). Guests can place orders; signed-in shoppers can edit profile, save up to **5** addresses, and prefill checkout. Admin confirms stock from the Orders screen as before.
 
 Add the public Razorpay key to `customer/.env`:
 

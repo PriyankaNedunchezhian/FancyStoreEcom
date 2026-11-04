@@ -46,4 +46,4 @@ Opens at [http://localhost:5174](http://localhost:5174). Admin stays on port **5
 | `/orders/:id` | Order detail |
 | `/account` | Sign in, profile, password, saved addresses |
 
-Active products come from the shared Supabase catalog. Checkout supports **COD** (Unpaid) and **Razorpay** (Paid after verify). Shipping is **₹79**, or free at **₹999+** subtotal. Signed-in shoppers can save up to 5 addresses and prefill checkout. Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.
+Active products come from the shared Supabase catalog. Checkout supports **COD** (Unpaid) and **Razorpay** (Paid after verify). Unpaid Razorpay orders can be paid later from **My Orders**. Shipping is **₹79**, or free at **₹999+** subtotal. Signed-in shoppers can save up to 5 addresses and prefill checkout. Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.

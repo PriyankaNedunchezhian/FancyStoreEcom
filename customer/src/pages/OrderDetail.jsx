@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMyOrder, paymentMethodLabel } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
+import { canPayRazorpayOrder, payRazorpayOrder } from '../utils/payOrder';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -21,6 +22,8 @@ export default function OrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [payError, setPayError] = useState('');
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     if (authLoading) return undefined;
@@ -54,6 +57,27 @@ export default function OrderDetail() {
     };
   }, [id, user, authLoading]);
 
+  async function onPay() {
+    if (!order) return;
+    setPayError('');
+    setPaying(true);
+    try {
+      await payRazorpayOrder(order.orderId, {
+        name: order.customerName,
+        email: order.customerEmail,
+        phone: order.customerPhone,
+      });
+      const refreshed = await getMyOrder(id);
+      setOrder(refreshed || { ...order, paymentStatus: 'Paid' });
+    } catch (err) {
+      if (err?.code !== 'payment_cancelled') {
+        setPayError(err.message || 'Could not complete payment.');
+      }
+    } finally {
+      setPaying(false);
+    }
+  }
+
   if (authLoading || loading) {
     return <p className="status-line">Loading order…</p>;
   }
@@ -77,6 +101,8 @@ export default function OrderDetail() {
     );
   }
 
+  const canPay = canPayRazorpayOrder(order);
+
   return (
     <div className="order-detail">
       <p className="crumb">
@@ -92,6 +118,15 @@ export default function OrderDetail() {
           {paymentMethodLabel(order.paymentMethod)}
         </p>
       </header>
+
+      {canPay && (
+        <div className="hero-actions" style={{ marginBottom: 18 }}>
+          <button className="btn btn-dark" type="button" onClick={onPay} disabled={paying}>
+            {paying ? 'Opening payment…' : 'Pay now'}
+          </button>
+        </div>
+      )}
+      {payError && <p className="form-notice">{payError}</p>}
 
       <div className="checkout-grid">
         <div>
@@ -141,6 +176,17 @@ export default function OrderDetail() {
             </strong>
           </p>
           <p><span>Total</span><strong>{formatPrice(order.total)}</strong></p>
+          <p>
+            <span>Payment</span>
+            <strong>
+              {paymentMethodLabel(order.paymentMethod)} · {order.paymentStatus}
+            </strong>
+          </p>
+          {canPay && (
+            <button className="btn btn-dark btn-block" type="button" onClick={onPay} disabled={paying}>
+              {paying ? 'Opening payment…' : 'Pay now'}
+            </button>
+          )}
           <Link className="btn btn-line btn-block" to="/shop">Continue shopping</Link>
         </aside>
       </div>
