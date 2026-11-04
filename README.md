@@ -225,7 +225,8 @@ Checkout and admin status changes call the `notify-order` Edge Function (soft-fa
 | Event | Trigger |
 |-------|---------|
 | `placed` | COD place, or Razorpay paid (including Pay from My Orders) |
-| `confirmed` / `shipped` / `cancelled` | Admin order status change |
+| `confirmed` / `shipped` | Admin order status change |
+| `cancelled` | Admin cancel, or customer self-cancel (Pending) |
 
 1. Create a Resend API key (test from-address: `onboarding@resend.dev`).
 2. Create a [Wapito](https://wapito.com) channel, link your WhatsApp number (QR), and copy the channel token (`wpt_...`).
@@ -237,6 +238,23 @@ npx.cmd supabase secrets set RESEND_API_KEY=re_xxx ORDER_EMAIL_FROM="Kumar Fancy
 ```
 
 Phones are normalized to E.164 with default country **+91**. Email needs `customer_email`; WhatsApp needs `customer_phone`. Wapito is an unofficial WhatsApp API — warm up the number and avoid spammy bursts.
+
+### Customer cancel (Pending only)
+
+Signed-in shoppers can cancel their own **Pending** orders from **My Orders** / order detail. Confirmed and later statuses stay admin-only.
+
+| Payment | What happens |
+|---------|----------------|
+| COD / Razorpay **Unpaid** | `cancel_my_order` RPC → status **Cancelled**, stock restored if deducted |
+| Razorpay **Paid** | Refund via Razorpay, then cancel → **Cancelled** + **Refunded** |
+
+1. Run [`supabase/customer_cancel_order.sql`](supabase/customer_cancel_order.sql) in the SQL Editor.
+2. Local `npm run dev` uses `/api/razorpay/cancel-order` (same Razorpay keys as checkout).
+3. Production — deploy the cancel function (reuses `RAZORPAY_*` secrets):
+
+```bash
+npx.cmd supabase functions deploy cancel-customer-order --yes
+```
 
 ---
 
@@ -297,7 +315,8 @@ FancyStoreEcom/
 │   ├── razorpay_orders.sql # Razorpay columns + COD/online place-order
 │   ├── shipping_fees.sql   # shipping_total + ₹79 / free at ₹999+
 │   ├── customer_addresses.sql # Saved delivery addresses (max 5)
-│   ├── functions/          # Edge Functions (Razorpay + notify-order)
+│   ├── customer_cancel_order.sql # Customer Pending self-cancel RPC
+│   ├── functions/          # Edge Functions (Razorpay + notify + cancel)
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql
 ├── customer/               # Customer storefront
@@ -322,6 +341,8 @@ FancyStoreEcom/
 | Admin login says “Admin access only” | Set App Metadata `{ "role": "admin" }` on that user, run `admin_roles.sql`, then sign out/in. |
 | Guest order not in My Orders | Expected — guest orders have no account. Sign in before placing to track them. |
 | Razorpay order created but unpaid | Customer closed Checkout. Order stays Unpaid; complete payment or handle in admin. |
+| Customer cancel fails / RPC missing | Run `customer_cancel_order.sql`. Paid cancel also needs Razorpay keys and (in production) `cancel-customer-order` deployed. |
+| Cannot cancel after Confirmed | Expected — only **Pending** orders are customer-cancellable. Admin can still cancel Confirmed. |
 | `email rate limit exceeded` on create account | Supabase free email limit. Turn off **Confirm email** in Auth settings, wait about an hour, or sign in with an existing user instead of creating a new one. |
 | Missing env / blank catalog | Check `.env` in the repo root and `customer/.env`. Restart `npm run dev` after changing env files. |
 | Admin Vite crashes watching images on Windows | Root `vite.config.js` ignores image files in the watcher. Restart the admin server. |

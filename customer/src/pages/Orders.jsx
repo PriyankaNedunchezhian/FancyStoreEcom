@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyOrders, paymentMethodLabel } from '../supabase/orders';
+import {
+  canCancelOrder,
+  cancelMyOrder,
+  getMyOrders,
+  paymentMethodLabel,
+} from '../supabase/orders';
 import { formatPrice } from '../utils/money';
 import { canPayRazorpayOrder, payRazorpayOrder } from '../utils/payOrder';
 
@@ -21,6 +26,8 @@ export default function Orders() {
   const [error, setError] = useState('');
   const [payingId, setPayingId] = useState('');
   const [payError, setPayError] = useState('');
+  const [cancellingId, setCancellingId] = useState('');
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     if (authLoading) return undefined;
@@ -56,6 +63,7 @@ export default function Orders() {
 
   async function onPay(order) {
     setPayError('');
+    setCancelError('');
     setPayingId(String(order.orderId));
     try {
       await payRazorpayOrder(order.orderId, {
@@ -76,6 +84,36 @@ export default function Orders() {
       }
     } finally {
       setPayingId('');
+    }
+  }
+
+  async function onCancel(order) {
+    if (!canCancelOrder(order)) return;
+    const paidNote =
+      order.paymentStatus === 'Paid' && order.paymentMethod === 'razorpay'
+        ? ' Your Razorpay payment will be refunded.'
+        : '';
+    const ok = window.confirm(
+      `Cancel order #${order.orderId}?${paidNote} This cannot be undone.`,
+    );
+    if (!ok) return;
+
+    setCancelError('');
+    setPayError('');
+    setCancellingId(String(order.orderId));
+    try {
+      const refreshed = await cancelMyOrder(order);
+      setOrders((current) =>
+        current.map((row) =>
+          row.orderId === order.orderId
+            ? refreshed || { ...row, status: 'Cancelled' }
+            : row,
+        ),
+      );
+    } catch (err) {
+      setCancelError(err.message || 'Could not cancel this order.');
+    } finally {
+      setCancellingId('');
     }
   }
 
@@ -120,10 +158,12 @@ export default function Orders() {
         <p>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</p>
       </header>
       {payError && <p className="form-notice">{payError}</p>}
+      {cancelError && <p className="form-notice">{cancelError}</p>}
       <ul className="orders-list">
         {orders.map((order) => {
           const canPay = canPayRazorpayOrder(order);
-          const busy = payingId === String(order.orderId);
+          const canCancel = canCancelOrder(order);
+          const listBusy = Boolean(payingId || cancellingId);
           return (
             <li key={order.id}>
               <div>
@@ -139,10 +179,20 @@ export default function Orders() {
                   <button
                     className="btn btn-dark"
                     type="button"
-                    disabled={Boolean(payingId)}
+                    disabled={listBusy}
                     onClick={() => onPay(order)}
                   >
-                    {busy ? 'Opening…' : 'Pay'}
+                    {payingId === String(order.orderId) ? 'Opening…' : 'Pay'}
+                  </button>
+                )}
+                {canCancel && (
+                  <button
+                    className="btn btn-line"
+                    type="button"
+                    disabled={listBusy}
+                    onClick={() => onCancel(order)}
+                  >
+                    {cancellingId === String(order.orderId) ? 'Cancelling…' : 'Cancel'}
                   </button>
                 )}
                 <Link className="btn btn-line" to={`/orders/${order.id}`}>View</Link>

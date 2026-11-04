@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.notify-order]
 verify_jwt = false
+
+[functions.cancel-customer-order]
+verify_jwt = false

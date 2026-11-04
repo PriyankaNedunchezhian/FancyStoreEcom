@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyOrder, paymentMethodLabel } from '../supabase/orders';
+import {
+  canCancelOrder,
+  cancelMyOrder,
+  getMyOrder,
+  paymentMethodLabel,
+} from '../supabase/orders';
 import { formatPrice } from '../utils/money';
 import { canPayRazorpayOrder, payRazorpayOrder } from '../utils/payOrder';
 
@@ -24,6 +29,8 @@ export default function OrderDetail() {
   const [error, setError] = useState('');
   const [payError, setPayError] = useState('');
   const [paying, setPaying] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (authLoading) return undefined;
@@ -78,6 +85,29 @@ export default function OrderDetail() {
     }
   }
 
+  async function onCancel() {
+    if (!order || !canCancelOrder(order)) return;
+    const paidNote =
+      order.paymentStatus === 'Paid' && order.paymentMethod === 'razorpay'
+        ? ' Your Razorpay payment will be refunded.'
+        : '';
+    const ok = window.confirm(
+      `Cancel order #${order.orderId}?${paidNote} This cannot be undone.`,
+    );
+    if (!ok) return;
+
+    setCancelError('');
+    setCancelling(true);
+    try {
+      const refreshed = await cancelMyOrder(order);
+      setOrder(refreshed || { ...order, status: 'Cancelled' });
+    } catch (err) {
+      setCancelError(err.message || 'Could not cancel this order.');
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   if (authLoading || loading) {
     return <p className="status-line">Loading order…</p>;
   }
@@ -102,6 +132,8 @@ export default function OrderDetail() {
   }
 
   const canPay = canPayRazorpayOrder(order);
+  const canCancel = canCancelOrder(order);
+  const actionBusy = paying || cancelling;
 
   return (
     <div className="order-detail">
@@ -119,14 +151,22 @@ export default function OrderDetail() {
         </p>
       </header>
 
-      {canPay && (
-        <div className="hero-actions" style={{ marginBottom: 18 }}>
-          <button className="btn btn-dark" type="button" onClick={onPay} disabled={paying}>
-            {paying ? 'Opening payment…' : 'Pay now'}
-          </button>
+      {(canPay || canCancel) && (
+        <div className="hero-actions" style={{ marginBottom: 18, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {canPay && (
+            <button className="btn btn-dark" type="button" onClick={onPay} disabled={actionBusy}>
+              {paying ? 'Opening payment…' : 'Pay now'}
+            </button>
+          )}
+          {canCancel && (
+            <button className="btn btn-line" type="button" onClick={onCancel} disabled={actionBusy}>
+              {cancelling ? 'Cancelling…' : 'Cancel order'}
+            </button>
+          )}
         </div>
       )}
       {payError && <p className="form-notice">{payError}</p>}
+      {cancelError && <p className="form-notice">{cancelError}</p>}
 
       <div className="checkout-grid">
         <div>
@@ -183,8 +223,13 @@ export default function OrderDetail() {
             </strong>
           </p>
           {canPay && (
-            <button className="btn btn-dark btn-block" type="button" onClick={onPay} disabled={paying}>
+            <button className="btn btn-dark btn-block" type="button" onClick={onPay} disabled={actionBusy}>
               {paying ? 'Opening payment…' : 'Pay now'}
+            </button>
+          )}
+          {canCancel && (
+            <button className="btn btn-line btn-block" type="button" onClick={onCancel} disabled={actionBusy}>
+              {cancelling ? 'Cancelling…' : 'Cancel order'}
             </button>
           )}
           <Link className="btn btn-line btn-block" to="/shop">Continue shopping</Link>

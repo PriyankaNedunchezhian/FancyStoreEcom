@@ -104,3 +104,60 @@ export async function verifyRazorpayPayment({
     alreadyPaid: Boolean(data?.alreadyPaid),
   };
 }
+
+/** Paid Razorpay cancel: refund first, then cancel_my_order (local Vite or Edge). */
+export async function cancelPaidRazorpayOrder(orderId) {
+  const id = Number(orderId);
+  if (!Number.isFinite(id) || id <= 0) {
+    throwPaymentError('A valid order id is required.');
+  }
+
+  if (useLocalPaymentApi()) {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    if (sessionError || !session?.access_token) {
+      throwPaymentError('Sign in to cancel your order.', 'auth_required');
+    }
+
+    const response = await fetch('/api/razorpay/cancel-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ orderId: id }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.error) {
+      throwPaymentError(data?.error || `Cancel failed (${response.status}).`);
+    }
+    return {
+      ok: Boolean(data?.ok ?? true),
+      orderId: data?.orderId ?? id,
+      status: data?.status || 'Cancelled',
+      paymentStatus: data?.paymentStatus || 'Refunded',
+      refundId: data?.refundId || null,
+    };
+  }
+
+  const { data, error } = await supabase.functions.invoke('cancel-customer-order', {
+    body: { orderId: id },
+  });
+  if (error || data?.error) {
+    throwPaymentError(
+      data?.error ||
+        error?.message ||
+        'Could not cancel and refund. Deploy cancel-customer-order for production.',
+    );
+  }
+
+  return {
+    ok: Boolean(data?.ok),
+    orderId: data?.orderId ?? id,
+    status: data?.status || 'Cancelled',
+    paymentStatus: data?.paymentStatus || 'Refunded',
+    refundId: data?.refundId || null,
+  };
+}

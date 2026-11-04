@@ -1,4 +1,6 @@
 import { supabase } from './config';
+import { notifyOrder } from './notifyOrder';
+import { cancelPaidRazorpayOrder } from './payments';
 
 function throwIfError(error) {
   if (error) {
@@ -172,4 +174,44 @@ export function paymentMethodLabel(method) {
   if (method === 'razorpay') return 'Razorpay';
   if (method === 'stripe') return 'Online payment';
   return 'Cash on delivery';
+}
+
+/** Customer self-cancel is limited to Pending orders. */
+export function canCancelOrder(order) {
+  return Boolean(order && order.status === 'Pending');
+}
+
+/**
+ * Cancel own Pending order.
+ * Unpaid → cancel_my_order RPC.
+ * Paid Razorpay → refund via local/Edge API, then cancel (marks Refunded).
+ */
+export async function cancelMyOrder(orderOrId) {
+  const order =
+    orderOrId && typeof orderOrId === 'object'
+      ? orderOrId
+      : await getMyOrder(orderOrId);
+
+  if (!order) {
+    throw new Error('Order not found.');
+  }
+  if (!canCancelOrder(order)) {
+    throw new Error('Only pending orders can be cancelled.');
+  }
+
+  const id = Number(order.orderId);
+  const isPaidRazorpay =
+    order.paymentStatus === 'Paid' && order.paymentMethod === 'razorpay';
+
+  if (isPaidRazorpay) {
+    await cancelPaidRazorpayOrder(id);
+  } else {
+    const { error } = await supabase.rpc('cancel_my_order', {
+      p_order_id: id,
+    });
+    throwIfError(error);
+  }
+
+  await notifyOrder(id, 'cancelled');
+  return getMyOrder(id);
 }

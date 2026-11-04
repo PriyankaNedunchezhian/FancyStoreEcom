@@ -22,12 +22,13 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function rpc(supabaseUrl, anonKey, fnName, args) {
+async function rpc(supabaseUrl, anonKey, fnName, args, accessToken = '') {
+  const bearer = accessToken || anonKey;
   const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${fnName}`, {
     method: 'POST',
     headers: {
       apikey: anonKey,
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${bearer}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
     },
@@ -51,6 +52,41 @@ async function rpc(supabaseUrl, anonKey, fnName, args) {
     throw err;
   }
   return data;
+}
+
+async function restSelect(supabaseUrl, anonKey, path, accessToken) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    method: 'GET',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+  if (!response.ok) {
+    const message =
+      data?.message ||
+      data?.error ||
+      (typeof data === 'string' ? data : null) ||
+      `REST query failed (${response.status}).`;
+    const err = new Error(message);
+    err.status = response.status;
+    throw err;
+  }
+  return data;
+}
+
+function bearerFromReq(req) {
+  const header = String(req.headers.authorization || req.headers.Authorization || '');
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : '';
 }
 
 function verifySignature(secret, orderId, paymentId, signature) {
@@ -208,6 +244,106 @@ export function razorpayDevApiPlugin() {
             });
 
             sendJson(res, 200, result || { ok: true, orderId, paymentStatus: 'Paid' });
+            return;
+          }
+
+          if (req.method === 'POST' && req.url.startsWith('/api/razorpay/cancel-order')) {
+            const accessToken = bearerFromReq(req);
+            if (!accessToken) {
+              sendJson(res, 401, { error: 'Sign in to cancel your order.' });
+              return;
+            }
+
+            const body = await readJson(req);
+            const orderId = Number(body?.orderId);
+            if (!Number.isFinite(orderId) || orderId <= 0) {
+              sendJson(res, 400, { error: 'A valid orderId is required.' });
+              return;
+            }
+
+            const rows = await restSelect(
+              supabaseUrl,
+              anonKey,
+              `orders?select=order_id,customer_id,status,payment_status,payment_method,razorpay_payment_id&order_id=eq.${orderId}&limit=1`,
+              accessToken,
+            );
+            const order = Array.isArray(rows) ? rows[0] : rows;
+            if (!order) {
+              sendJson(res, 404, { error: 'Order not found.' });
+              return;
+            }
+            if (order.status !== 'Pending') {
+              sendJson(res, 400, { error: 'Only pending orders can be cancelled.' });
+              return;
+            }
+
+            let refundId = null;
+            if (order.payment_status === 'Paid') {
+              if (order.payment_method !== 'razorpay') {
+                sendJson(res, 400, {
+                  error: 'Paid orders without Razorpay must be refunded by the store.',
+                });
+                return;
+              }
+              const paymentId = String(order.razorpay_payment_id || '').trim();
+              if (!paymentId) {
+                sendJson(res, 400, {
+                  error: 'Missing Razorpay payment id. Contact the store for a refund.',
+                });
+                return;
+              }
+
+              const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+              const refundRes = await fetch(
+                `https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`,
+                {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({}),
+                },
+              );
+              const refundBody = await refundRes.json().catch(() => ({}));
+              const alreadyRefunded =
+                refundRes.status === 400 &&
+                String(
+                  refundBody?.error?.description ||
+                    refundBody?.error?.code ||
+                    refundBody?.error?.reason ||
+                    '',
+                )
+                  .toLowerCase()
+                  .includes('already');
+
+              if (!refundRes.ok && !alreadyRefunded) {
+                sendJson(res, 502, {
+                  error:
+                    refundBody?.error?.description ||
+                    refundBody?.error?.reason ||
+                    `Razorpay refund failed (${refundRes.status}). Order was not cancelled.`,
+                });
+                return;
+              }
+              refundId = refundBody?.id || null;
+            }
+
+            const cancelled = await rpc(
+              supabaseUrl,
+              anonKey,
+              'cancel_my_order',
+              { p_order_id: orderId },
+              accessToken,
+            );
+
+            sendJson(res, 200, {
+              ok: true,
+              orderId,
+              status: cancelled?.status || 'Cancelled',
+              paymentStatus: cancelled?.payment_status || order.payment_status,
+              refundId,
+            });
             return;
           }
 
