@@ -54,7 +54,8 @@ cd FancyStoreEcom
 5. Run [`supabase/customer_orders.sql`](supabase/customer_orders.sql) once so the storefront can place COD orders (guest or signed-in) via `place_customer_order`.
 6. Run [`supabase/admin_roles.sql`](supabase/admin_roles.sql) once to add `is_admin()` and lock catalog/order writes to admins.
 7. Run [`supabase/razorpay_orders.sql`](supabase/razorpay_orders.sql) once for Razorpay columns and online checkout via `place_customer_order`.
-8. Create users:
+8. Run [`supabase/shipping_fees.sql`](supabase/shipping_fees.sql) once for flat shipping (₹79 under ₹999, free at ₹999+).
+9. Create users:
    - **Admin:** Authentication → Users → Add user (email + password), then open that user → **App Metadata** and set:
      ```json
      { "role": "admin" }
@@ -161,7 +162,7 @@ Open **http://localhost:5174**.
 | `/orders/:id` | Order detail (signed in) |
 | `/account` | Sign in / create account |
 
-Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). Guests can place orders; sign in before checkout to see them under **My Orders**. Admin confirms stock from the Orders screen as before.
+Checkout supports **cash on delivery** (Pending / Unpaid) and **Razorpay** (Pending / Paid after signature verify). Shipping is **₹79**, or **free** when the merchandise subtotal is **₹999+** (computed in `place_customer_order`). Guests can place orders; sign in before checkout to see them under **My Orders**. Admin confirms stock from the Orders screen as before.
 
 Add the public Razorpay key to `customer/.env`:
 
@@ -268,6 +269,7 @@ FancyStoreEcom/
 │   ├── customer_orders.sql # Place-order RPC + payment_method
 │   ├── admin_roles.sql     # is_admin() + tighter RLS
 │   ├── razorpay_orders.sql # Razorpay columns + COD/online place-order
+│   ├── shipping_fees.sql   # shipping_total + ₹79 / free at ₹999+
 │   ├── functions/          # Edge Functions (create/verify Razorpay)
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql

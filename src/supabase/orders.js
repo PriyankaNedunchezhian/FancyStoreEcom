@@ -71,6 +71,7 @@ function mapOrder(row) {
     razorpayPaymentId: row.razorpay_payment_id ?? '',
     subtotal: Number(row.subtotal ?? 0),
     discountTotal: Number(row.discount_total ?? 0),
+    shippingTotal: Number(row.shipping_total ?? 0),
     total: Number(row.total ?? 0),
     notes: row.notes ?? '',
     stockDeducted: Boolean(row.stock_deducted),

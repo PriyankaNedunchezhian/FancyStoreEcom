@@ -2,9 +2,13 @@ import { Link } from 'react-router-dom';
 import CategoryMark from '../components/CategoryMark';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/money';
+import { FREE_SHIPPING_MIN, getOrderTotal, getShippingTotal } from '../utils/shipping';
 
 export default function Cart() {
   const { items, subtotal, setQty, removeItem } = useCart();
+  const shipping = getShippingTotal(subtotal);
+  const total = getOrderTotal(subtotal);
+  const toFree = Math.max(0, FREE_SHIPPING_MIN - subtotal);
 
   if (items.length === 0) {
     return (
@@ -56,7 +60,18 @@ export default function Cart() {
         <aside className="summary">
           <h2>Summary</h2>
           <p><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></p>
-          <p className="summary-note">Shipping and payment will be added when checkout is connected.</p>
+          <p>
+            <span>Shipping</span>
+            <strong>{shipping <= 0 ? 'Free' : formatPrice(shipping)}</strong>
+          </p>
+          <p><span>Total</span><strong>{formatPrice(total)}</strong></p>
+          {toFree > 0 ? (
+            <p className="summary-note">
+              Add {formatPrice(toFree)} more for complimentary shipping.
+            </p>
+          ) : (
+            <p className="summary-note">Complimentary shipping applied.</p>
+          )}
           <Link className="btn btn-dark btn-block" to="/checkout">Checkout</Link>
           <Link className="text-link" to="/shop">Continue shopping</Link>
         </aside>

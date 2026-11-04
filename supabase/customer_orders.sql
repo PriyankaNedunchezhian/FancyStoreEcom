@@ -16,6 +16,9 @@ alter table public.orders
 alter table public.orders
   add column if not exists razorpay_payment_id text;
 
+alter table public.orders
+  add column if not exists shipping_total numeric(12, 2) not null default 0;
+
 create index if not exists orders_customer_id_idx on public.orders (customer_id);
 create index if not exists orders_razorpay_order_id_idx
   on public.orders (razorpay_order_id)
@@ -58,6 +61,8 @@ declare
   v_method text;
   v_order_id bigint;
   v_subtotal numeric(12, 2) := 0;
+  v_discount numeric(12, 2) := 0;
+  v_shipping numeric(12, 2) := 0;
   v_total numeric(12, 2) := 0;
   elem jsonb;
   v_product_id bigint;
@@ -66,6 +71,8 @@ declare
   v_unit numeric(12, 2);
   v_line numeric(12, 2);
   lines_count integer := 0;
+  c_free_shipping_min numeric(12, 2) := 999;
+  c_shipping_fee numeric(12, 2) := 79;
 begin
   v_name := trim(coalesce(p_customer->>'name', ''));
   v_phone := trim(coalesce(p_customer->>'phone', ''));
@@ -130,7 +137,12 @@ begin
     raise exception 'Add at least one product to the order.';
   end if;
 
-  v_total := v_subtotal;
+  v_discount := 0;
+  v_shipping := case
+    when v_subtotal >= c_free_shipping_min then 0
+    else c_shipping_fee
+  end;
+  v_total := greatest(v_subtotal - v_discount, 0) + v_shipping;
 
   insert into public.orders (
     customer_id,
@@ -143,6 +155,7 @@ begin
     payment_method,
     subtotal,
     discount_total,
+    shipping_total,
     total,
     notes,
     stock_deducted
@@ -157,7 +170,8 @@ begin
     'Unpaid',
     v_method,
     v_subtotal,
-    0,
+    v_discount,
+    v_shipping,
     v_total,
     '',
     false
@@ -204,16 +218,23 @@ begin
   end loop;
 
   -- Recompute totals after merge collisions
-  select
-    coalesce(sum(line_total), 0),
-    coalesce(sum(line_total), 0)
-  into v_subtotal, v_total
+  select coalesce(sum(line_total), 0)
+  into v_subtotal
   from public.order_items
   where order_id = v_order_id;
+
+  v_discount := 0;
+  v_shipping := case
+    when v_subtotal >= c_free_shipping_min then 0
+    else c_shipping_fee
+  end;
+  v_total := greatest(v_subtotal - v_discount, 0) + v_shipping;
 
   update public.orders
   set
     subtotal = v_subtotal,
+    discount_total = v_discount,
+    shipping_total = v_shipping,
     total = v_total,
     updated_at = now()
   where order_id = v_order_id;

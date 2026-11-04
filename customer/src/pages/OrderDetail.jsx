@@ -134,6 +134,12 @@ export default function OrderDetail() {
           {order.discountTotal > 0 && (
             <p><span>Discount</span><strong>−{formatPrice(order.discountTotal)}</strong></p>
           )}
+          <p>
+            <span>Shipping</span>
+            <strong>
+              {Number(order.shippingTotal) <= 0 ? 'Free' : formatPrice(order.shippingTotal)}
+            </strong>
+          </p>
           <p><span>Total</span><strong>{formatPrice(order.total)}</strong></p>
           <Link className="btn btn-line btn-block" to="/shop">Continue shopping</Link>
         </aside>

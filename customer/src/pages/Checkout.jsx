@@ -6,6 +6,7 @@ import { placeOrder } from '../supabase/orders';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../supabase/payments';
 import { formatPrice } from '../utils/money';
 import { openRazorpayCheckout } from '../utils/razorpay';
+import { getOrderTotal, getShippingTotal } from '../utils/shipping';
 
 const EMPTY = { name: '', phone: '', email: '', address: '' };
 
@@ -17,6 +18,8 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const shipping = getShippingTotal(subtotal);
+  const total = getOrderTotal(subtotal);
 
   useEffect(() => {
     if (!user) return;
@@ -51,7 +54,8 @@ export default function Checkout() {
       paymentMethod: method,
       paymentStatus,
       subtotal,
-      total: subtotal,
+      shippingTotal: shipping,
+      total,
       items: items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -216,6 +220,11 @@ export default function Checkout() {
             ))}
           </ul>
           <p><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></p>
+          <p>
+            <span>Shipping</span>
+            <strong>{shipping <= 0 ? 'Free' : formatPrice(shipping)}</strong>
+          </p>
+          <p><span>Total</span><strong>{formatPrice(total)}</strong></p>
           <p>
             <span>Payment</span>
             <strong>{paymentMethod === 'razorpay' ? 'Online' : 'COD'}</strong>

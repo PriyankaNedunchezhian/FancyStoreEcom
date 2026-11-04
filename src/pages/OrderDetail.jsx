@@ -239,6 +239,14 @@ export default function OrderDetail() {
               <span>Discount</span>
               <span>{formatMoney(order.discountTotal)}</span>
             </div>
+            <div className="order-totals-row">
+              <span>Shipping</span>
+              <span>
+                {Number(order.shippingTotal) <= 0
+                  ? 'Free'
+                  : formatMoney(order.shippingTotal)}
+              </span>
+            </div>
             <div className="order-totals-row grand">
               <span>Total</span>
               <span>{formatMoney(order.total)}</span>

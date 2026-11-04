@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { paymentMethodLabel } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
+import { getOrderTotal, getShippingTotal } from '../utils/shipping';
 
 export default function OrderConfirmation() {
   const { id } = useParams();
@@ -12,6 +13,11 @@ export default function OrderConfirmation() {
   const method = order?.paymentMethod || 'cod';
   const paymentStatus = order?.paymentStatus || (method === 'razorpay' ? 'Paid' : 'Unpaid');
   const isOnlinePaid = method === 'razorpay' && paymentStatus === 'Paid';
+  const subtotal = Number(order?.subtotal ?? 0);
+  const shippingTotal =
+    order?.shippingTotal != null ? Number(order.shippingTotal) : getShippingTotal(subtotal);
+  const total =
+    order?.total != null ? Number(order.total) : getOrderTotal(subtotal);
 
   return (
     <div className="confirm-page">
@@ -44,7 +50,12 @@ export default function OrderConfirmation() {
               </li>
             ))}
           </ul>
-          <p><span>Total</span><strong>{formatPrice(order.total ?? order.subtotal)}</strong></p>
+          <p><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></p>
+          <p>
+            <span>Shipping</span>
+            <strong>{shippingTotal <= 0 ? 'Free' : formatPrice(shippingTotal)}</strong>
+          </p>
+          <p><span>Total</span><strong>{formatPrice(total)}</strong></p>
           <p>
             <span>Payment</span>
             <strong>
