@@ -12,9 +12,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return;
-      setUser(session?.user ?? null);
+      setUser(data.user ?? null);
       setLoading(false);
     });
 

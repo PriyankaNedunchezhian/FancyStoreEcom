@@ -120,6 +120,10 @@ declare
   oid bigint;
   total_count integer;
 begin
+  if auth.uid() is not null and not public.is_admin() then
+    raise exception 'Only admins can load sample orders.';
+  end if;
+
   select product_id, selling_price, name
   into p1, price1, name1
   from public.products

@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 import {
   ORDER_STATUS_TRANSITIONS,
   PAYMENT_STATUSES,
@@ -10,6 +22,8 @@ import {
   updatePaymentStatus,
 } from '../supabase/orders';
 import OutlinedSelect from '../components/form/OutlinedSelect';
+import AppButton from '../mui/components/AppButton';
+import AppNotification from '../mui/components/AppNotification';
 import './Products.css';
 import './Orders.css';
 
@@ -30,12 +44,6 @@ function formatDate(value) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function statusClass(status) {
-  return String(status || '')
-    .toLowerCase()
-    .replace(/\s+/g, '-');
 }
 
 const ACTION_LABELS = {
@@ -125,9 +133,9 @@ export default function OrderDetail() {
     return (
       <div className="order-detail-page">
         {error ? <p className="products-alert error">{error}</p> : null}
-        <Link to="/orders" className="products-btn secondary">
-          ← Back to orders
-        </Link>
+        <AppButton variant="outlined" component={Link} to="/orders">
+          Back to orders
+        </AppButton>
       </div>
     );
   }
@@ -137,54 +145,46 @@ export default function OrderDetail() {
   return (
     <div className="order-detail-page">
       <div className="order-detail-top">
-        <div className="order-detail-meta">
-          <Link
+        <Stack className="order-detail-meta" direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+          <IconButton
+            component={Link}
             to="/orders"
-            className="products-btn secondary dtt-icon-only"
             title="Back to orders"
             aria-label="Back to orders"
           >
-            <ArrowLeft size={15} strokeWidth={2.25} aria-hidden="true" />
-          </Link>
+            <ArrowBackIcon />
+          </IconButton>
           <strong>Order #{order.orderId}</strong>
-          <span
-            className={`products-badge orders-badge ${statusClass(order.status)}`}
-          >
-            {order.status}
-          </span>
-          <span
-            className={`products-badge orders-badge ${statusClass(order.paymentStatus)}`}
-          >
-            {order.paymentStatus}
-          </span>
-        </div>
-        <div className="order-detail-actions">
+          <Chip size="small" label={order.status} />
+          <Chip size="small" label={order.paymentStatus} />
+        </Stack>
+        <Stack className="order-detail-actions" direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {canEditOrder(order) ? (
-            <Link
-              to={`/orders/${order.id}/edit`}
-              className="products-btn secondary dtt-icon-only"
-              title="Edit order"
-              aria-label="Edit order"
-            >
-              <Pencil size={15} strokeWidth={2.25} aria-hidden="true" />
-            </Link>
+            <Tooltip title="Edit order">
+              <IconButton
+                component={Link}
+                to={`/orders/${order.id}/edit`}
+                aria-label="Edit order"
+              >
+                <EditOutlinedIcon />
+              </IconButton>
+            </Tooltip>
           ) : null}
           {nextStatuses.map((status) => (
-            <button
+            <AppButton
               key={status}
-              type="button"
-              className={`products-btn${status === 'Cancelled' ? ' danger' : ''}`}
+              color={status === 'Cancelled' ? 'error' : 'primary'}
               disabled={busy}
               onClick={() => handleStatus(status)}
             >
               {ACTION_LABELS[status] || status}
-            </button>
+            </AppButton>
           ))}
-        </div>
+        </Stack>
       </div>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
-      {notice ? <p className="products-alert success">{notice}</p> : null}
+      <AppNotification inline severity="error" message={error} />
+      <AppNotification inline severity="success" message={notice} />
 
       <div className="order-detail-grid">
         <section className="products-card">
@@ -195,21 +195,21 @@ export default function OrderDetail() {
           {order.items.length === 0 ? (
             <p className="products-empty">No items on this order.</p>
           ) : (
-            <div className="products-table-wrap">
-              <table className="products-table">
-                <thead>
-                  <tr>
-                    <th>Image</th>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Unit price</th>
-                    <th>Line total</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Image</TableCell>
+                    <TableCell>Product</TableCell>
+                    <TableCell>Qty</TableCell>
+                    <TableCell>Unit price</TableCell>
+                    <TableCell>Line total</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {order.items.map((item) => (
-                    <tr key={item.id || `${item.productId}-${item.productName}`}>
-                      <td>
+                    <TableRow key={item.id || `${item.productId}-${item.productName}`} hover>
+                      <TableCell>
                         {item.imageUrl ? (
                           <img
                             src={item.imageUrl}
@@ -219,16 +219,16 @@ export default function OrderDetail() {
                         ) : (
                           <span className="products-thumb placeholder">N/A</span>
                         )}
-                      </td>
-                      <td className="products-name">{item.productName}</td>
-                      <td>{item.quantity}</td>
-                      <td>{formatMoney(item.unitPrice)}</td>
-                      <td>{formatMoney(item.lineTotal)}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="products-name">{item.productName}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{formatMoney(item.unitPrice)}</TableCell>
+                      <TableCell>{formatMoney(item.lineTotal)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
           <div className="order-totals">
             <div className="order-totals-row">

@@ -27,6 +27,38 @@ export function loadRazorpayScript() {
   });
 }
 
+const UPI_INSTRUMENT = {
+  method: 'upi',
+  apps: ['google_pay', 'phonepe', 'paytm', 'bhim'],
+  flows: ['intent', 'qr'],
+};
+
+function checkoutDisplay(preferredMethod = 'upi') {
+  const upiBlock = {
+    name: 'Google Pay and UPI',
+    instruments: [UPI_INSTRUMENT],
+  };
+
+  if (preferredMethod === 'upi') {
+    return {
+      blocks: { upi_apps: upiBlock },
+      sequence: ['block.upi_apps', 'card', 'wallet', 'netbanking'],
+      preferences: { show_default_blocks: true },
+    };
+  }
+
+  return {
+    blocks: {
+      popular: {
+        name: 'UPI, cards and more',
+        instruments: [UPI_INSTRUMENT, { method: 'card' }, { method: 'wallet' }, { method: 'netbanking' }],
+      },
+    },
+    sequence: ['block.popular'],
+    preferences: { show_default_blocks: true },
+  };
+}
+
 /**
  * Opens Razorpay Checkout. Resolves with payment response or rejects on dismiss/failure.
  */
@@ -39,6 +71,7 @@ export async function openRazorpayCheckout({
   email,
   phone,
   description = 'Kumar Fancy Store',
+  preferredMethod = 'upi',
 }) {
   const Razorpay = await loadRazorpayScript();
   if (!Razorpay) {
@@ -53,10 +86,20 @@ export async function openRazorpayCheckout({
       name: 'Kumar Fancy Store',
       description,
       order_id: razorpayOrderId,
+      method: {
+        upi: true,
+        card: true,
+        netbanking: true,
+        wallet: true,
+      },
       prefill: {
         name: name || '',
         email: email || '',
         contact: phone || '',
+        ...(preferredMethod === 'upi' ? { method: 'upi' } : null),
+      },
+      config: {
+        display: checkoutDisplay(preferredMethod),
       },
       theme: {
         color: '#1a1a1a',

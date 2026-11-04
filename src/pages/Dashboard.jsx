@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Chip from '@mui/material/Chip';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import {
   Heart,
   IndianRupee,
@@ -47,12 +55,6 @@ function formatDate(value) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function statusClass(status) {
-  return String(status || '')
-    .toLowerCase()
-    .replace(/\s+/g, '-');
 }
 
 function readThemeColors() {
@@ -466,43 +468,39 @@ export default function Dashboard() {
         {metrics.recent.length === 0 ? (
           <p className="dash-empty">No recent orders.</p>
         ) : (
-          <div className="products-table-wrap">
-            <table className="products-table dash-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small" className="dash-table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Order</TableCell>
+                  <TableCell>Customer</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Total</TableCell>
+                  <TableCell>Created</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {metrics.recent.map((order) => (
-                  <tr key={order.id}>
-                    <td>
+                  <TableRow key={order.id} hover>
+                    <TableCell>
                       <Link
                         to={`/orders/${order.id}`}
                         className="dash-order-link"
                       >
                         {order.orderId}
                       </Link>
-                    </td>
-                    <td>{order.customerName || '—'}</td>
-                    <td>
-                      <span
-                        className={`products-badge orders-badge ${statusClass(order.status)}`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>{formatMoney(order.total)}</td>
-                    <td>{formatDate(order.createdAt)}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{order.customerName || '—'}</TableCell>
+                    <TableCell>
+                      <Chip size="small" label={order.status} />
+                    </TableCell>
+                    <TableCell>{formatMoney(order.total)}</TableCell>
+                    <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </section>
     </div>

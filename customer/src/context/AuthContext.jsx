@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase/config';
+import { passwordPolicyError } from '../utils/passwordPolicy';
 
 const AuthContext = createContext(null);
 
@@ -10,9 +11,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return;
-      setUser(data.session?.user ?? null);
+      setUser(data.user ?? null);
       setLoading(false);
     });
 
@@ -40,6 +41,10 @@ export function AuthProvider({ children }) {
     }
 
     async function signUp(name, email, password) {
+      const policyError = passwordPolicyError(password);
+      if (policyError) {
+        throw new Error(policyError);
+      }
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -73,6 +78,10 @@ export function AuthProvider({ children }) {
       if (!user?.email) {
         throw new Error('Sign in again to change your password.');
       }
+      const policyError = passwordPolicyError(newPassword);
+      if (policyError) {
+        throw new Error(policyError);
+      }
       const { error: reauthError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword,
@@ -86,6 +95,7 @@ export function AuthProvider({ children }) {
         password: newPassword,
       });
       if (error) throw error;
+      await supabase.auth.signOut({ scope: 'others' });
       setUser(data.user);
       return data.user;
     }

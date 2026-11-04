@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { changePassword } from '../supabase/auth';
+import { passwordPolicyError } from '../utils/passwordPolicy';
+import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ThemeSwitcher from '../components/ThemeSwitcher';
-import OutlinedTextField from '../components/form/OutlinedTextField';
+import AppButton from '../mui/components/AppButton';
+import AppTextField from '../mui/components/AppTextField';
 import './Profile.css';
 
 function getPasswordErrorMessage(err) {
@@ -18,7 +22,7 @@ function getPasswordErrorMessage(err) {
     return 'Current password is incorrect.';
   }
   if (message.includes('at least') || message.includes('weak')) {
-    return 'New password should be at least 6 characters.';
+    return 'Password must be at least 8 characters and include letters and numbers.';
   }
   if (message.includes('rate') || message.includes('too many')) {
     return 'Too many attempts. Try again later.';
@@ -62,8 +66,9 @@ export default function Profile() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('New password should be at least 6 characters.');
+    const policyError = passwordPolicyError(newPassword);
+    if (policyError) {
+      setError(policyError);
       return;
     }
 
@@ -85,7 +90,7 @@ export default function Profile() {
     <div className="profile-page">
       <section className="profile-card">
         <div className="profile-card-head">
-          <span className="profile-page-avatar">{initials}</span>
+          <Avatar sx={{ width: 56, height: 56 }}>{initials}</Avatar>
           <div>
             <h2>Admin details</h2>
             <p>Account information for this admin user.</p>
@@ -111,13 +116,9 @@ export default function Profile() {
           </div>
         </dl>
 
-        <button
-          type="button"
-          className="profile-signout"
-          onClick={() => setLogoutOpen(true)}
-        >
+        <AppButton color="error" variant="contained" onClick={() => setLogoutOpen(true)}>
           Sign out
-        </button>
+        </AppButton>
       </section>
 
       <section className="profile-card">
@@ -133,7 +134,7 @@ export default function Profile() {
         </div>
 
         <form className="profile-password-form" onSubmit={handlePasswordUpdate}>
-          <OutlinedTextField
+          <AppTextField
             id="current-password"
             label="Current password"
             type="password"
@@ -143,7 +144,7 @@ export default function Profile() {
             autoComplete="current-password"
           />
 
-          <OutlinedTextField
+          <AppTextField
             id="new-password"
             label="New password"
             type="password"
@@ -151,9 +152,10 @@ export default function Profile() {
             onChange={(e) => setNewPassword(e.target.value)}
             required
             autoComplete="new-password"
+            helperText="At least 8 characters, with letters and numbers."
           />
 
-          <OutlinedTextField
+          <AppTextField
             id="confirm-password"
             label="Confirm new password"
             type="password"
@@ -163,16 +165,12 @@ export default function Profile() {
             autoComplete="new-password"
           />
 
-          {error ? <p className="profile-alert error" role="alert">{error}</p> : null}
-          {success ? (
-            <p className="profile-alert success" role="status">
-              {success}
-            </p>
-          ) : null}
+          {error ? <Alert severity="error">{error}</Alert> : null}
+          {success ? <Alert severity="success">{success}</Alert> : null}
 
-          <button type="submit" className="profile-submit" disabled={loading}>
+          <AppButton type="submit" loading={loading}>
             {loading ? 'Updating…' : 'Update password'}
-          </button>
+          </AppButton>
         </form>
       </section>
 

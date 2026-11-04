@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { razorpayDevApiPlugin } from './server/razorpayDevApi.js';
+import { DEV_SECURITY_HEADERS, SECURITY_HEADERS } from './src/securityHeaders.js';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -15,6 +16,10 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), razorpayDevApiPlugin()],
     server: {
       port: 5174,
+      headers: DEV_SECURITY_HEADERS,
+    },
+    preview: {
+      headers: SECURITY_HEADERS,
     },
   };
 });

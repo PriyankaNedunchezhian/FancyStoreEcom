@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import CircularProgress from '@mui/material/CircularProgress';
+import Stack from '@mui/material/Stack';
 import { useAuth } from '../context/AuthContext';
+import AppButton from '../mui/components/AppButton';
+import AppDialog from '../mui/components/AppDialog';
 import {
   canCancelOrder,
   cancelMyOrder,
@@ -31,6 +38,7 @@ export default function OrderDetail() {
   const [paying, setPaying] = useState(false);
   const [cancelError, setCancelError] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return undefined;
@@ -87,15 +95,12 @@ export default function OrderDetail() {
 
   async function onCancel() {
     if (!order || !canCancelOrder(order)) return;
-    const paidNote =
-      order.paymentStatus === 'Paid' && order.paymentMethod === 'razorpay'
-        ? ' Your Razorpay payment will be refunded.'
-        : '';
-    const ok = window.confirm(
-      `Cancel order #${order.orderId}?${paidNote} This cannot be undone.`,
-    );
-    if (!ok) return;
+    setCancelOpen(true);
+  }
 
+  async function confirmCancel() {
+    if (!order) return;
+    setCancelOpen(false);
     setCancelError('');
     setCancelling(true);
     try {
@@ -109,14 +114,18 @@ export default function OrderDetail() {
   }
 
   if (authLoading || loading) {
-    return <p className="status-line">Loading order…</p>;
+    return (
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
   }
 
   if (!user) {
     return (
       <div className="empty">
         <h1>Sign in to see this order</h1>
-        <Link className="btn btn-dark" to="/account">Sign in</Link>
+        <AppButton component={Link} to="/account">Sign in</AppButton>
       </div>
     );
   }
@@ -126,7 +135,7 @@ export default function OrderDetail() {
       <div className="empty">
         <h1>Order not found</h1>
         <p>{error || 'This order is not linked to your account.'}</p>
-        <Link className="btn btn-dark" to="/orders">Back to orders</Link>
+        <AppButton component={Link} to="/orders">Back to orders</AppButton>
       </div>
     );
   }
@@ -137,11 +146,10 @@ export default function OrderDetail() {
 
   return (
     <div className="order-detail">
-      <p className="crumb">
+      <Breadcrumbs className="crumb" sx={{ mb: 2 }}>
         <Link to="/orders">My orders</Link>
-        <span>/</span>
         <span>#{order.orderId}</span>
-      </p>
+      </Breadcrumbs>
       <header className="page-intro">
         <p className="kicker">Order #{order.orderId}</p>
         <h1>{order.status}</h1>
@@ -152,21 +160,21 @@ export default function OrderDetail() {
       </header>
 
       {(canPay || canCancel) && (
-        <div className="hero-actions" style={{ marginBottom: 18, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Stack className="hero-actions" direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {canPay && (
-            <button className="btn btn-dark" type="button" onClick={onPay} disabled={actionBusy}>
-              {paying ? 'Opening payment…' : 'Pay now'}
-            </button>
+            <AppButton onClick={onPay} loading={paying} disabled={actionBusy}>
+              Pay now
+            </AppButton>
           )}
           {canCancel && (
-            <button className="btn btn-line" type="button" onClick={onCancel} disabled={actionBusy}>
-              {cancelling ? 'Cancelling…' : 'Cancel order'}
-            </button>
+            <AppButton variant="outlined" onClick={onCancel} loading={cancelling} disabled={actionBusy}>
+              Cancel order
+            </AppButton>
           )}
-        </div>
+        </Stack>
       )}
-      {payError && <p className="form-notice">{payError}</p>}
-      {cancelError && <p className="form-notice">{cancelError}</p>}
+      {payError ? <Alert severity="error" sx={{ mb: 2 }}>{payError}</Alert> : null}
+      {cancelError ? <Alert severity="error" sx={{ mb: 2 }}>{cancelError}</Alert> : null}
 
       <div className="checkout-grid">
         <div>
@@ -223,18 +231,33 @@ export default function OrderDetail() {
             </strong>
           </p>
           {canPay && (
-            <button className="btn btn-dark btn-block" type="button" onClick={onPay} disabled={actionBusy}>
-              {paying ? 'Opening payment…' : 'Pay now'}
-            </button>
+            <AppButton fullWidth onClick={onPay} loading={paying} disabled={actionBusy}>
+              Pay now
+            </AppButton>
           )}
           {canCancel && (
-            <button className="btn btn-line btn-block" type="button" onClick={onCancel} disabled={actionBusy}>
-              {cancelling ? 'Cancelling…' : 'Cancel order'}
-            </button>
+            <AppButton fullWidth variant="outlined" onClick={onCancel} loading={cancelling} disabled={actionBusy}>
+              Cancel order
+            </AppButton>
           )}
-          <Link className="btn btn-line btn-block" to="/shop">Continue shopping</Link>
+          <AppButton fullWidth variant="outlined" component={Link} to="/shop">
+            Continue shopping
+          </AppButton>
         </aside>
       </div>
+      <AppDialog
+        open={cancelOpen}
+        title={`Cancel order #${order.orderId}?`}
+        message={
+          order.paymentStatus === 'Paid' && order.paymentMethod === 'razorpay'
+            ? 'Your Razorpay payment will be refunded. This cannot be undone.'
+            : 'This cannot be undone.'
+        }
+        confirmLabel="Cancel order"
+        danger
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelOpen(false)}
+      />
     </div>
   );
 }

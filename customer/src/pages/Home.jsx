@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom';
 import { RotateCcw, ShieldCheck, Sparkles } from 'lucide-react';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import CategoryMark from '../components/CategoryMark';
 import ProductCard from '../components/ProductCard';
 import { useCatalog } from '../context/CatalogContext';
 import { categoriesFor } from '../data/catalog';
+import AppButton from '../mui/components/AppButton';
 
 const NOTES = [
   { icon: Sparkles, title: 'Daily pieces', text: 'Studs, chains, and bangles from the store catalog.' },
@@ -26,8 +30,8 @@ export default function Home() {
             Earrings, necklaces, bangles, rings, and chains — the same active pieces you keep in admin.
           </p>
           <div className="hero-actions">
-            <Link className="btn btn-dark" to="/shop">Shop the collection</Link>
-            <Link className="btn btn-line" to="/shop?category=Earrings">Earrings</Link>
+            <AppButton component={Link} to="/shop">Shop the collection</AppButton>
+            <AppButton variant="outlined" component={Link} to="/shop?category=Earrings">Earrings</AppButton>
           </div>
         </div>
         <div className="hero-stage" aria-hidden="true">
@@ -74,17 +78,19 @@ export default function Home() {
           <Link to="/shop">See the full edit</Link>
         </div>
         {loading ? (
-          <p className="status-line">Loading the collection…</p>
+          <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 160 }}>
+            <CircularProgress size={28} />
+          </Box>
         ) : error ? (
           <div className="empty">
             <h2>The collection could not load</h2>
-            <p>{error}</p>
+            <Alert severity="error">{error}</Alert>
           </div>
         ) : featured.length === 0 ? (
           <div className="empty">
             <h2>Sign in to load the catalog</h2>
             <p>Use the same email and password as the admin page. The products appear after that sign-in.</p>
-            <Link className="btn btn-dark" to="/account">Sign in</Link>
+            <AppButton component={Link} to="/account">Sign in</AppButton>
           </div>
         ) : (
           <div className="product-grid">

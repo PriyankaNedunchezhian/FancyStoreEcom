@@ -1,5 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
-import { corsHeaders, errorResponse, jsonResponse } from '../_shared/cors.ts';
+import {
+  canAccessOrder,
+  corsHeadersFor,
+  errorResponse,
+  escapeHtml,
+  isAdminUser,
+  jsonResponse,
+  originAllowed,
+  requireUser,
+} from '../_shared/security.ts';
 
 const EVENTS = new Set(['placed', 'confirmed', 'shipped', 'cancelled']);
 
@@ -15,7 +24,6 @@ function formatInr(amount: number) {
   }
 }
 
-/** Normalize Indian-friendly phone input to E.164 (+91 default). */
 function toE164(phone: string, defaultCountry = '91') {
   const raw = String(phone || '').trim();
   if (!raw) return '';
@@ -36,11 +44,11 @@ function toE164(phone: string, defaultCountry = '91') {
 }
 
 function eventCopy(event: string, order: Record<string, unknown>) {
-  const id = order.order_id;
+  const id = escapeHtml(order.order_id);
   const total = formatInr(Number(order.total || 0));
-  const name = String(order.customer_name || 'there');
-  const payment = String(order.payment_status || '');
-  const method = String(order.payment_method || '');
+  const name = escapeHtml(order.customer_name || 'there');
+  const payment = escapeHtml(order.payment_status || '');
+  const method = escapeHtml(order.payment_method || '');
 
   const headlines: Record<string, string> = {
     placed: `Order #${id} received`,
@@ -71,7 +79,7 @@ function buildEmailHtml(
   const rows = (items || [])
     .map(
       (item) =>
-        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${String(item.product_name || '')} × ${Number(item.quantity || 0)}</td><td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${formatInr(Number(item.line_total || 0))}</td></tr>`,
+        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${escapeHtml(item.product_name)} × ${Number(item.quantity || 0)}</td><td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${formatInr(Number(item.line_total || 0))}</td></tr>`,
     )
     .join('');
 
@@ -82,7 +90,7 @@ function buildEmailHtml(
     <p style="line-height:1.5">${copy.text}</p>
     <table style="width:100%;border-collapse:collapse;margin:20px 0">${rows}</table>
     <p style="font-size:18px"><strong>Total ${formatInr(Number(order.total || 0))}</strong></p>
-    <p style="color:#777;font-size:13px">Status: ${String(order.status || '')} · Payment: ${String(order.payment_status || '')} (${String(order.payment_method || '')})</p>
+    <p style="color:#777;font-size:13px">Status: ${escapeHtml(order.status)} · Payment: ${escapeHtml(order.payment_status)} (${escapeHtml(order.payment_method)})</p>
   </div></body></html>`;
 }
 
@@ -102,15 +110,11 @@ async function sendResendEmail(to: string, subject: string, html: string, text: 
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    return {
-      ok: false,
-      error: body?.message || body?.error || `Resend HTTP ${res.status}`,
-    };
+    return { ok: false, error: body?.message || body?.error || `Resend HTTP ${res.status}` };
   }
   return { ok: true, id: body?.id };
 }
 
-/** WhatsApp via Wapito (https://wapito.com/docs/api/messages/send-text/). No SMS. */
 async function sendWapitoWhatsApp(toE164: string, body: string) {
   const token = Deno.env.get('WAPITO_API_TOKEN');
   if (!token) return { skipped: true, reason: 'WAPITO_API_TOKEN not set' };
@@ -122,21 +126,13 @@ async function sendWapitoWhatsApp(toE164: string, body: string) {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      to: toE164,
-      body,
-      typing_time: 2,
-    }),
+    body: JSON.stringify({ to: toE164, body, typing_time: 2 }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     return {
       ok: false,
-      error:
-        data?.message ||
-        data?.error?.message ||
-        data?.code ||
-        `Wapito HTTP ${res.status}`,
+      error: data?.message || data?.error?.message || data?.code || `Wapito HTTP ${res.status}`,
     };
   }
   return { ok: true, id: data?.id || data?.message_id || data?.data?.id };
@@ -144,17 +140,25 @@ async function sendWapitoWhatsApp(toE164: string, body: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeadersFor(req) });
   }
   if (req.method !== 'POST') {
-    return errorResponse('Method not allowed.', 405);
+    return errorResponse(req, 'Method not allowed.', 405);
+  }
+  if (!originAllowed(req)) {
+    return errorResponse(req, 'Origin is not allowed.', 403);
   }
 
   try {
+    const auth = await requireUser(req);
+    if (!auth.user) {
+      return errorResponse(req, auth.error, auth.status);
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) {
-      return errorResponse('Supabase service role is not configured.', 500);
+      return errorResponse(req, 'Supabase service role is not configured.', 500);
     }
 
     const body = await req.json().catch(() => ({}));
@@ -162,26 +166,32 @@ Deno.serve(async (req) => {
     const event = String(body?.event || '').toLowerCase().trim();
 
     if (!Number.isFinite(orderId) || orderId <= 0) {
-      return errorResponse('A valid orderId is required.');
+      return errorResponse(req, 'A valid orderId is required.');
     }
     if (!EVENTS.has(event)) {
-      return errorResponse('Unsupported notification event.');
+      return errorResponse(req, 'Unsupported notification event.');
+    }
+    if (event !== 'placed' && !isAdminUser(auth.user)) {
+      return errorResponse(req, 'Only admins can send this notification.', 403);
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(
-        'order_id, customer_name, customer_email, customer_phone, status, payment_status, payment_method, total, shipping_address',
+        'order_id, customer_id, customer_name, customer_email, customer_phone, status, payment_status, payment_method, total',
       )
       .eq('order_id', orderId)
       .maybeSingle();
 
     if (orderError) {
-      return errorResponse(orderError.message || 'Could not load order.', 500);
+      return errorResponse(req, orderError.message || 'Could not load order.', 500);
     }
     if (!order) {
-      return errorResponse('Order not found.', 404);
+      return errorResponse(req, 'Order not found.', 404);
+    }
+    if (!canAccessOrder(auth.user, order)) {
+      return errorResponse(req, 'You can only notify about your own orders.', 403);
     }
 
     const { data: items } = await supabase
@@ -199,7 +209,7 @@ Deno.serve(async (req) => {
       sendWapitoWhatsApp(phone, copy.text),
     ]);
 
-    return jsonResponse({
+    return jsonResponse(req, {
       ok: true,
       orderId,
       event,
@@ -208,6 +218,6 @@ Deno.serve(async (req) => {
       sms: { skipped: true, reason: 'SMS not used; WhatsApp via Wapito' },
     });
   } catch (err) {
-    return errorResponse(err?.message || 'Unexpected notify-order error.', 500);
+    return errorResponse(req, err?.message || 'Unexpected notify-order error.', 500);
   }
 });

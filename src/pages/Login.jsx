@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import { login, resetPassword } from '../supabase/auth';
 import { useAuth } from '../context/AuthContext';
 import ThemeSwitcher from '../components/ThemeSwitcher';
-import OutlinedTextField from '../components/form/OutlinedTextField';
+import AppButton from '../mui/components/AppButton';
+import AppTextField from '../mui/components/AppTextField';
 import './Login.css';
 
 function getAuthErrorMessage(err, mode) {
@@ -19,7 +26,7 @@ function getAuthErrorMessage(err, mode) {
     message.includes('invalid credentials')
   ) {
     return mode === 'reset'
-      ? 'No account found with this email.'
+      ? 'If an account exists for that email, a reset link will be sent.'
       : 'Invalid email or password.';
   }
   if (message.includes('email') && message.includes('valid')) {
@@ -32,7 +39,7 @@ function getAuthErrorMessage(err, mode) {
     return 'Network error. Check your connection.';
   }
   return mode === 'reset'
-    ? 'Could not send reset email. Please try again.'
+    ? 'If an account exists for that email, a reset link will be sent.'
     : 'Login failed. Please try again.';
 }
 
@@ -53,9 +60,9 @@ export default function Login() {
 
   if (authLoading) {
     return (
-      <div className="auth-loading">
-        <p>Loading…</p>
-      </div>
+      <Box className="auth-loading">
+        <CircularProgress size={28} />
+      </Box>
     );
   }
 
@@ -92,9 +99,14 @@ export default function Login() {
     setLoading(true);
     try {
       await resetPassword(email.trim());
-      setSuccess('Password reset email sent. Check your inbox.');
+      setSuccess('If an account exists for that email, a reset link will be sent.');
     } catch (err) {
-      setError(getAuthErrorMessage(err, 'reset'));
+      const message = getAuthErrorMessage(err, 'reset');
+      if (message.toLowerCase().includes('too many') || message.toLowerCase().includes('network')) {
+        setError(message);
+      } else {
+        setSuccess('If an account exists for that email, a reset link will be sent.');
+      }
     } finally {
       setLoading(false);
     }
@@ -108,7 +120,7 @@ export default function Login() {
         <div className="login-brand-top">
           <img
             className="login-logo"
-            src="/fancy-store-mark.svg"
+            src="/fancy-store-mark-dark.svg"
             alt="Fancy Store logo"
             width="56"
             height="56"
@@ -125,19 +137,24 @@ export default function Login() {
           <ThemeSwitcher />
         </div>
         <div className="login-panel" key={mode}>
-          <p className="login-kicker">{isReset ? 'Account recovery' : 'Welcome back'}</p>
-          <h1>{isReset ? 'Reset password' : 'Sign in'}</h1>
-          <p className="login-subtitle">
+          <Typography variant="overline" color="text.secondary">
+            {isReset ? 'Account recovery' : 'Welcome back'}
+          </Typography>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, letterSpacing: '-0.03em' }}>
+            {isReset ? 'Reset password' : 'Sign in'}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
             {isReset
               ? 'Enter your admin email and we will send a reset link.'
               : 'Access products, orders, and store operations.'}
-          </p>
+          </Typography>
 
-          <form
-            className="login-form"
+          <Box
+            component="form"
             onSubmit={isReset ? handleReset : handleLogin}
+            sx={{ display: 'grid', gap: 1.5 }}
           >
-            <OutlinedTextField
+            <AppTextField
               id="email"
               label="Email"
               type="email"
@@ -148,18 +165,8 @@ export default function Login() {
             />
 
             {!isReset ? (
-              <div className="password-field">
-                <div className="password-label-row">
-                  <span className="password-label-spacer" />
-                  <button
-                    type="button"
-                    className="forgot-link"
-                    onClick={() => switchMode('reset')}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-                <OutlinedTextField
+              <Stack spacing={0.5}>
+                <AppTextField
                   id="password"
                   label="Password"
                   type="password"
@@ -168,13 +175,23 @@ export default function Login() {
                   required
                   autoComplete="current-password"
                 />
-              </div>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => switchMode('reset')}
+                  >
+                    Forgot password?
+                  </Link>
+                </Box>
+              </Stack>
             ) : null}
 
-            {error ? <p className="login-error" role="alert">{error}</p> : null}
-            {success ? <p className="login-success" role="status">{success}</p> : null}
+            {error ? <Alert severity="error">{error}</Alert> : null}
+            {success ? <Alert severity="success">{success}</Alert> : null}
 
-            <button type="submit" className="login-submit" disabled={loading}>
+            <AppButton type="submit" loading={loading} fullWidth>
               {loading
                 ? isReset
                   ? 'Sending…'
@@ -182,17 +199,19 @@ export default function Login() {
                 : isReset
                   ? 'Send reset link'
                   : 'Sign in'}
-            </button>
-          </form>
+            </AppButton>
+          </Box>
 
           {isReset ? (
-            <button
+            <Link
+              component="button"
               type="button"
-              className="back-to-login"
+              underline="hover"
               onClick={() => switchMode('login')}
+              sx={{ mt: 2 }}
             >
               ← Back to sign in
-            </button>
+            </Link>
           ) : null}
         </div>
       </section>

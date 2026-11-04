@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import MuiAppProvider from './mui/MuiAppProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
@@ -16,6 +17,7 @@ import Profile from './pages/Profile';
 export default function App() {
   return (
     <ThemeProvider>
+      <MuiAppProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -43,6 +45,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </MuiAppProvider>
     </ThemeProvider>
   );
 }

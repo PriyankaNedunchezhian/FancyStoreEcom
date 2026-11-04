@@ -1,5 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import Stack from '@mui/material/Stack';
 import { useAuth } from '../context/AuthContext';
+import AppButton from '../mui/components/AppButton';
 import { paymentMethodLabel } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
 import { getOrderTotal, getShippingTotal } from '../utils/shipping';
@@ -32,8 +34,8 @@ export default function OrderConfirmation() {
             </>
           ) : (
             <>
-              Your order <strong>#{orderId}</strong> is Pending. Payment is cash on delivery
-              ({paymentMethodLabel(method)}).
+              Your order <strong>#{orderId}</strong> is Pending. Payment is{' '}
+              {paymentMethodLabel(method)}.
             </>
           )}
         </p>
@@ -72,14 +74,14 @@ export default function OrderConfirmation() {
         </aside>
       )}
 
-      <div className="hero-actions">
-        <Link className="btn btn-dark" to="/shop">Continue shopping</Link>
+      <Stack className="hero-actions" direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+        <AppButton component={Link} to="/shop">Continue shopping</AppButton>
         {user ? (
-          <Link className="btn btn-line" to={`/orders/${orderId}`}>View order</Link>
+          <AppButton variant="outlined" component={Link} to={`/orders/${orderId}`}>View order</AppButton>
         ) : (
-          <Link className="btn btn-line" to="/account">Sign in to track orders</Link>
+          <AppButton variant="outlined" component={Link} to="/account">Sign in to track orders</AppButton>
         )}
-      </div>
+      </Stack>
     </div>
   );
 }

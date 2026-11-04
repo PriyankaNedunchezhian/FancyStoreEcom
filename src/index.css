@@ -28,8 +28,12 @@ body {
 }
 
 img,
-svg,
 video {
+  max-width: 100%;
+  height: auto;
+}
+
+svg:not(.MuiSvgIcon-root) {
   max-width: 100%;
   height: auto;
 }

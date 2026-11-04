@@ -136,6 +136,12 @@ export function razorpayDevApiPlugin() {
             return;
           }
 
+          const accessToken = bearerFromReq(req);
+          if (!accessToken) {
+            sendJson(res, 401, { error: 'Sign in required.' });
+            return;
+          }
+
           if (req.method === 'POST' && req.url.startsWith('/api/razorpay/create-order')) {
             const body = await readJson(req);
             const orderId = Number(body?.orderId);
@@ -144,9 +150,13 @@ export function razorpayDevApiPlugin() {
               return;
             }
 
-            const session = await rpc(supabaseUrl, anonKey, 'get_razorpay_payment_session', {
-              p_order_id: orderId,
-            });
+            const session = await rpc(
+              supabaseUrl,
+              anonKey,
+              'get_razorpay_payment_session',
+              { p_order_id: orderId },
+              accessToken,
+            );
 
             if (!session || typeof session !== 'object') {
               sendJson(res, 404, { error: 'Order not found or not payable online.' });
@@ -190,10 +200,13 @@ export function razorpayDevApiPlugin() {
                 sendJson(res, 502, { error: 'Razorpay did not return an order id.' });
                 return;
               }
-              await rpc(supabaseUrl, anonKey, 'attach_razorpay_order_id', {
-                p_order_id: orderId,
-                p_razorpay_order_id: razorpayOrderId,
-              });
+              await rpc(
+                supabaseUrl,
+                anonKey,
+                'attach_razorpay_order_id',
+                { p_order_id: orderId, p_razorpay_order_id: razorpayOrderId },
+                accessToken,
+              );
             }
 
             sendJson(res, 200, {
@@ -236,24 +249,60 @@ export function razorpayDevApiPlugin() {
               return;
             }
 
-            const result = await rpc(supabaseUrl, anonKey, 'finalize_razorpay_payment', {
-              p_order_id: orderId,
-              p_razorpay_order_id: razorpayOrderId,
-              p_razorpay_payment_id: razorpayPaymentId,
-              p_razorpay_signature: razorpaySignature,
-            });
+            const orderRows = await restSelect(
+              supabaseUrl,
+              anonKey,
+              `orders?select=total,razorpay_order_id,payment_status,payment_method&order_id=eq.${orderId}&limit=1`,
+              accessToken,
+            );
+            const storeOrder = Array.isArray(orderRows) ? orderRows[0] : orderRows;
+            if (!storeOrder) {
+              sendJson(res, 404, { error: 'Order not found.' });
+              return;
+            }
+            if (storeOrder.razorpay_order_id !== razorpayOrderId) {
+              sendJson(res, 409, { error: 'Razorpay order does not match this store order.' });
+              return;
+            }
+
+            const paymentRes = await fetch(
+              `https://api.razorpay.com/v1/payments/${encodeURIComponent(razorpayPaymentId)}`,
+              {
+                headers: {
+                  Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
+                },
+              },
+            );
+            const payment = await paymentRes.json().catch(() => ({}));
+            const amountPaise = Math.round(Number(storeOrder.total || 0) * 100);
+            if (
+              !paymentRes.ok ||
+              payment?.status !== 'captured' ||
+              payment?.order_id !== razorpayOrderId ||
+              Number(payment?.amount) !== amountPaise
+            ) {
+              sendJson(res, 409, { error: 'Payment does not match this order amount.' });
+              return;
+            }
+
+            const result = await rpc(
+              supabaseUrl,
+              anonKey,
+              'finalize_razorpay_payment',
+              {
+                p_order_id: orderId,
+                p_razorpay_order_id: razorpayOrderId,
+                p_razorpay_payment_id: razorpayPaymentId,
+                p_razorpay_signature: razorpaySignature,
+              },
+              accessToken,
+            );
 
             sendJson(res, 200, result || { ok: true, orderId, paymentStatus: 'Paid' });
             return;
           }
 
           if (req.method === 'POST' && req.url.startsWith('/api/razorpay/cancel-order')) {
-            const accessToken = bearerFromReq(req);
-            if (!accessToken) {
-              sendJson(res, 401, { error: 'Sign in to cancel your order.' });
-              return;
-            }
-
             const body = await readJson(req);
             const orderId = Number(body?.orderId);
             if (!Number.isFinite(orderId) || orderId <= 0) {

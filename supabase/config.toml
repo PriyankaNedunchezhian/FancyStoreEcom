@@ -1,14 +1,14 @@
-# Minimal Supabase config for Edge Functions (Razorpay).
-# Project ref and secrets are set via CLI / Dashboard — not committed here.
+# Edge Functions. JWT is verified at the gateway; handlers also require a signed-in user.
+# ALLOWED_ORIGINS secret: comma-separated production origins (https://shop.example,https://admin.example).
 
 [functions.create-razorpay-order]
-verify_jwt = false
+verify_jwt = true
 
 [functions.verify-razorpay-payment]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-order]
-verify_jwt = false
+verify_jwt = true
 
 [functions.cancel-customer-order]
-verify_jwt = false
+verify_jwt = true

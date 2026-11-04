@@ -1,7 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
+import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
+import LocalAtmOutlinedIcon from '@mui/icons-material/LocalAtmOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import QrCode2OutlinedIcon from '@mui/icons-material/QrCode2Outlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Paper from '@mui/material/Paper';
+import Radio from '@mui/material/Radio';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import AppButton from '../mui/components/AppButton';
+import AppSelect from '../mui/components/AppSelect';
+import AppTextField from '../mui/components/AppTextField';
 import {
   MAX_ADDRESSES,
   createAddress,
@@ -15,6 +32,108 @@ import { payRazorpayOrder } from '../utils/payOrder';
 import { getOrderTotal, getShippingTotal } from '../utils/shipping';
 
 const EMPTY = { name: '', phone: '', email: '', address: '' };
+
+function GPayMark({ size = 28 }) {
+  return (
+    <Box
+      component="span"
+      aria-hidden
+      sx={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        bgcolor: '#fff',
+        color: '#1a73e8',
+        display: 'grid',
+        placeItems: 'center',
+        fontSize: size > 22 ? '0.72rem' : '0.6rem',
+        fontWeight: 800,
+        letterSpacing: '-0.04em',
+      }}
+    >
+      G
+    </Box>
+  );
+}
+
+const PAYMENT_OPTIONS = [
+  {
+    value: 'cod',
+    title: 'Cash on delivery',
+    description: 'Pay in cash when the order arrives. Marked Unpaid until then.',
+    icon: <LocalAtmOutlinedIcon />,
+  },
+  {
+    value: 'upi',
+    title: 'Google Pay / UPI',
+    description: 'Pay with GPay, PhonePe, Paytm, or any UPI app.',
+    icon: <GPayMark />,
+  },
+  {
+    value: 'razorpay',
+    title: 'Cards, net banking & wallets',
+    description: 'Pay now with a card, net banking, or a wallet. UPI is also available.',
+    icon: <PaymentsOutlinedIcon />,
+  },
+];
+
+function isOnlinePayment(choice) {
+  return choice === 'upi' || choice === 'razorpay';
+}
+
+function storePaymentMethod(choice) {
+  return isOnlinePayment(choice) ? 'razorpay' : 'cod';
+}
+
+function PaymentCard({ option, selected, onSelect }) {
+  return (
+    <Paper
+      variant="outlined"
+      role="radio"
+      aria-checked={selected}
+      tabIndex={0}
+      onClick={() => onSelect(option.value)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(option.value);
+        }
+      }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        p: 2,
+        minHeight: 92,
+        mb: 1.25,
+        cursor: 'pointer',
+        borderColor: selected ? 'primary.main' : 'divider',
+        bgcolor: selected ? '#F3EEE6' : '#FFFFFF',
+        boxShadow: selected ? 'inset 0 0 0 1px #1C1917' : 'none',
+      }}
+    >
+      <Radio checked={selected} value={option.value} tabIndex={-1} />
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          borderRadius: 2,
+          bgcolor: selected ? '#EAE2D6' : '#FAF7F2',
+          color: 'secondary.main',
+          display: 'grid',
+          placeItems: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {option.icon}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography sx={{ fontWeight: 700 }}>{option.title}</Typography>
+        <Typography variant="body2">{option.description}</Typography>
+      </Box>
+    </Paper>
+  );
+}
 
 function applySavedAddress(row, email = '') {
   if (!row) return null;
@@ -105,7 +224,7 @@ export default function Checkout() {
       <div className="empty">
         <h1>Nothing to check out</h1>
         <p>Add a piece to your bag first.</p>
-        <Link className="btn btn-dark" to="/shop">Shop jewellery</Link>
+        <AppButton component={Link} to="/shop">Shop jewellery</AppButton>
       </div>
     );
   }
@@ -174,7 +293,12 @@ export default function Checkout() {
       setError('Name, phone, and address are required.');
       return;
     }
-    if (paymentMethod === 'razorpay' && !form.email.trim()) {
+    const online = isOnlinePayment(paymentMethod);
+    if (online && !user) {
+      setError('Sign in to pay online with Google Pay, UPI, or a card.');
+      return;
+    }
+    if (online && !form.email.trim()) {
       setError('Email is required for online payment.');
       return;
     }
@@ -187,7 +311,7 @@ export default function Checkout() {
         phone: form.phone,
         email: form.email,
         address: form.address,
-        paymentMethod,
+        paymentMethod: storePaymentMethod(paymentMethod),
         items: items.map((item) => ({
           productId: item.id,
           quantity: item.qty,
@@ -196,7 +320,7 @@ export default function Checkout() {
       placedOrderId = orderId;
       await maybeSaveAddress();
 
-      if (paymentMethod === 'cod') {
+      if (!online) {
         await notifyOrder(orderId, 'placed');
         clear();
         navigate(`/order/${orderId}/confirmation`, {
@@ -210,6 +334,7 @@ export default function Checkout() {
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
+        preferredMethod: paymentMethod === 'upi' ? 'upi' : 'all',
       });
 
       clear();
@@ -238,99 +363,132 @@ export default function Checkout() {
         <p className="kicker">Checkout</p>
         <h1>Delivery details</h1>
         <p>
-          Guests can place an order. Sign in to use saved addresses and track My Orders.
           {user ? (
             <>
-              {' '}
+              Use a saved address or enter a new one.{' '}
               <Link to="/account">Manage addresses</Link>
             </>
-          ) : null}
+          ) : (
+            <>Guests can place an order. Sign in to use saved addresses and track My Orders.</>
+          )}
         </p>
       </header>
       <div className="checkout-grid">
-        <form onSubmit={onSubmit}>
-          {addresses.length > 0 && (
-            <label>
-              Deliver to
-              <select value={selectedAddressId} onChange={onPickAddress}>
-                <option value="">Enter a new address</option>
-                {addresses.map((row) => (
-                  <option key={row.id} value={row.id}>
-                    {row.label}
-                    {row.isDefault ? ' (default)' : ''} — {row.recipientName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+        <Box component="form" onSubmit={onSubmit} sx={{ display: 'grid', gap: 2 }}>
+          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Delivery</Typography>
+            <Box sx={{ display: 'grid', gap: 1.5 }}>
+              {addresses.length > 0 && (
+                <AppSelect
+                  label="Deliver to"
+                  value={selectedAddressId}
+                  onChange={onPickAddress}
+                  placeholder="Enter a new address"
+                  options={addresses.map((row) => ({
+                    value: row.id,
+                    label: `${row.label}${row.isDefault ? ' (default)' : ''} — ${row.recipientName}`,
+                  }))}
+                />
+              )}
 
-          <label>
-            Full name
-            <input value={form.name} onChange={(event) => update('name', event.target.value)} autoComplete="name" />
-          </label>
-          <label>
-            Phone
-            <input value={form.phone} onChange={(event) => update('phone', event.target.value)} autoComplete="tel" />
-          </label>
-          <label>
-            Email
-            <input type="email" value={form.email} onChange={(event) => update('email', event.target.value)} autoComplete="email" />
-          </label>
-          <label>
-            Address
-            <textarea rows={4} value={form.address} onChange={(event) => update('address', event.target.value)} />
-          </label>
-
-          {canSaveNewAddress && (
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={saveAddress}
-                onChange={(event) => setSaveAddress(event.target.checked)}
+              <AppTextField
+                label="Full name"
+                value={form.name}
+                onChange={(event) => update('name', event.target.value)}
+                autoComplete="name"
               />
-              <span>Save this address to my account</span>
-            </label>
-          )}
-
-          <fieldset className="pay-methods">
-            <legend>Payment</legend>
-            <label className={`pay-option${paymentMethod === 'cod' ? ' on' : ''}`}>
-              <input
-                type="radio"
-                name="payment"
-                checked={paymentMethod === 'cod'}
-                onChange={() => setPaymentMethod('cod')}
+              <AppTextField
+                label="Phone"
+                value={form.phone}
+                onChange={(event) => update('phone', event.target.value)}
+                autoComplete="tel"
               />
-              <span>
-                <strong>Cash on delivery</strong>
-                <small>Pay when the order arrives. Unpaid until then.</small>
-              </span>
-            </label>
-            <label className={`pay-option${paymentMethod === 'razorpay' ? ' on' : ''}`}>
-              <input
-                type="radio"
-                name="payment"
-                checked={paymentMethod === 'razorpay'}
-                onChange={() => setPaymentMethod('razorpay')}
+              <AppTextField
+                type="email"
+                label="Email"
+                value={form.email}
+                onChange={(event) => update('email', event.target.value)}
+                autoComplete="email"
               />
-              <span>
-                <strong>Online payment</strong>
-                <small>Pay now securely with Razorpay (UPI, cards, wallets).</small>
-              </span>
-            </label>
-          </fieldset>
+              <AppTextField
+                label="Address"
+                multiline
+                minRows={4}
+                value={form.address}
+                onChange={(event) => update('address', event.target.value)}
+              />
 
-          {error && <p className="form-notice">{error}</p>}
-          <button className="btn btn-dark" type="submit" disabled={busy}>
+              {canSaveNewAddress && (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={saveAddress}
+                      onChange={(event) => setSaveAddress(event.target.checked)}
+                    />
+                  }
+                  label="Save this address to my account"
+                />
+              )}
+            </Box>
+          </Paper>
+
+          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" sx={{ mb: 0.5, fontWeight: 700 }}>Payment</Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Choose one method. Google Pay and other UPI apps open in the Razorpay window.
+            </Typography>
+            <Box role="radiogroup" aria-label="Payment method">
+              {PAYMENT_OPTIONS.map((option) => (
+                <PaymentCard
+                  key={option.value}
+                  option={option}
+                  selected={paymentMethod === option.value}
+                  onSelect={setPaymentMethod}
+                />
+              ))}
+            </Box>
+            {isOnlinePayment(paymentMethod) ? (
+              <Box sx={{ mt: 0.5, p: 2, borderRadius: 2, bgcolor: '#FAF7F2', border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="body2" sx={{ mb: 1.25 }}>
+                  {paymentMethod === 'upi'
+                    ? 'After you tap Pay now, Razorpay opens on UPI. On a phone, Google Pay appears as an app. On a computer, scan the QR with Google Pay.'
+                    : 'After you tap Pay now, Razorpay lets you complete payment with:'}
+                </Typography>
+                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                  <Chip size="small" icon={<GPayMark size={18} />} label="Google Pay" variant="outlined" />
+                  <Chip size="small" icon={<QrCode2OutlinedIcon />} label="UPI QR" variant="outlined" />
+                  {paymentMethod !== 'upi' ? (
+                    <>
+                      <Chip size="small" icon={<CreditCardOutlinedIcon />} label="Credit / Debit card" variant="outlined" />
+                      <Chip size="small" icon={<AccountBalanceWalletOutlinedIcon />} label="Wallet" variant="outlined" />
+                      <Chip size="small" icon={<PaymentsOutlinedIcon />} label="Net banking" variant="outlined" />
+                    </>
+                  ) : (
+                    <>
+                      <Chip size="small" label="PhonePe" variant="outlined" />
+                      <Chip size="small" label="Paytm" variant="outlined" />
+                    </>
+                  )}
+                </Stack>
+              </Box>
+            ) : (
+              <Alert severity="info" sx={{ mt: 0.5 }}>
+                No payment is collected now. Pay the courier when your order is delivered.
+              </Alert>
+            )}
+          </Paper>
+
+          {error ? <Alert severity="error">{error}</Alert> : null}
+          <AppButton type="submit" loading={busy} disabled={busy}>
             {busy
-              ? paymentMethod === 'razorpay'
+              ? isOnlinePayment(paymentMethod)
                 ? 'Opening payment…'
                 : 'Placing order…'
-              : paymentMethod === 'razorpay'
+              : isOnlinePayment(paymentMethod)
                 ? 'Pay now'
                 : 'Place order'}
-          </button>
-        </form>
+          </AppButton>
+        </Box>
         <aside className="summary">
           <h2>Your bag</h2>
           <ul>
@@ -349,7 +507,9 @@ export default function Checkout() {
           <p><span>Total</span><strong>{formatPrice(total)}</strong></p>
           <p>
             <span>Payment</span>
-            <strong>{paymentMethod === 'razorpay' ? 'Online' : 'COD'}</strong>
+            <strong>
+              {paymentMethod === 'upi' ? 'Google Pay / UPI' : paymentMethod === 'razorpay' ? 'Online' : 'COD'}
+            </strong>
           </p>
         </aside>
       </div>

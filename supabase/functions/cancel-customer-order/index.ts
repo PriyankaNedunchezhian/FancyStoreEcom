@@ -1,12 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
-import { corsHeaders, errorResponse, jsonResponse } from '../_shared/cors.ts';
+import {
+  corsHeadersFor,
+  errorResponse,
+  jsonResponse,
+  originAllowed,
+} from '../_shared/security.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeadersFor(req) });
   }
   if (req.method !== 'POST') {
-    return errorResponse('Method not allowed.', 405);
+    return errorResponse(req, 'Method not allowed.', 405);
+  }
+  if (!originAllowed(req)) {
+    return errorResponse(req, 'Origin is not allowed.', 403);
   }
 
   try {
@@ -17,18 +25,18 @@ Deno.serve(async (req) => {
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-      return errorResponse('Supabase is not configured.', 500);
+      return errorResponse(req, 'Supabase is not configured.', 500);
     }
 
     const authHeader = req.headers.get('Authorization') || '';
     if (!authHeader.toLowerCase().startsWith('bearer ')) {
-      return errorResponse('Sign in to cancel your order.', 401);
+      return errorResponse(req, 'Sign in to cancel your order.', 401);
     }
 
     const body = await req.json().catch(() => ({}));
     const orderId = Number(body?.orderId ?? body?.order_id);
     if (!Number.isFinite(orderId) || orderId <= 0) {
-      return errorResponse('A valid orderId is required.');
+      return errorResponse(req, 'A valid orderId is required.');
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -39,7 +47,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await userClient.auth.getUser();
     if (userError || !user) {
-      return errorResponse('Sign in to cancel your order.', 401);
+      return errorResponse(req, 'Sign in to cancel your order.', 401);
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
@@ -52,16 +60,16 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (orderError) {
-      return errorResponse(orderError.message || 'Could not load order.', 500);
+      return errorResponse(req, orderError.message || 'Could not load order.', 500);
     }
     if (!order) {
-      return errorResponse('Order not found.', 404);
+      return errorResponse(req, 'Order not found.', 404);
     }
     if (order.customer_id !== user.id) {
-      return errorResponse('You can only cancel your own orders.', 403);
+      return errorResponse(req, 'You can only cancel your own orders.', 403);
     }
     if (order.status !== 'Pending') {
-      return errorResponse('Only pending orders can be cancelled.');
+      return errorResponse(req, 'Only pending orders can be cancelled.');
     }
 
     let refundId: string | null = null;
@@ -69,17 +77,19 @@ Deno.serve(async (req) => {
     if (order.payment_status === 'Paid') {
       if (order.payment_method !== 'razorpay') {
         return errorResponse(
+          req,
           'Paid orders without Razorpay must be refunded by the store.',
         );
       }
       const paymentId = String(order.razorpay_payment_id || '').trim();
       if (!paymentId) {
         return errorResponse(
+          req,
           'Missing Razorpay payment id. Contact the store for a refund.',
         );
       }
       if (!razorpayKeyId || !razorpayKeySecret) {
-        return errorResponse('Razorpay is not configured for refunds.', 500);
+        return errorResponse(req, 'Razorpay is not configured for refunds.', 500);
       }
 
       const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
@@ -108,7 +118,8 @@ Deno.serve(async (req) => {
 
       if (!refundRes.ok && !alreadyRefunded) {
         return errorResponse(
-          refundBody?.error?.description ||
+          req,
+            refundBody?.error?.description ||
             refundBody?.error?.reason ||
             `Razorpay refund failed (${refundRes.status}). Order was not cancelled.`,
           502,
@@ -124,13 +135,14 @@ Deno.serve(async (req) => {
 
     if (cancelError) {
       return errorResponse(
+        req,
         cancelError.message ||
           'Refund may have succeeded but the order could not be cancelled. Contact the store.',
         500,
       );
     }
 
-    return jsonResponse({
+    return jsonResponse(req, {
       ok: true,
       orderId,
       status: cancelled?.status || 'Cancelled',
@@ -139,6 +151,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     return errorResponse(
+      req,
       err?.message || 'Unexpected cancel-customer-order error.',
       500,
     );

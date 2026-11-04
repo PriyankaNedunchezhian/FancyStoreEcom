@@ -12,9 +12,13 @@ import {
   updateProduct,
   uploadProductImage,
 } from '../supabase/products';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 import OutlinedTextField from '../components/form/OutlinedTextField';
 import OutlinedSelect from '../components/form/OutlinedSelect';
 import OutlinedTextarea from '../components/form/OutlinedTextarea';
+import AppButton from '../mui/components/AppButton';
+import AppNotification from '../mui/components/AppNotification';
 import './Products.css';
 
 const emptyForm = {
@@ -158,7 +162,8 @@ export default function ProductForm() {
 
   function addFiles(fileList) {
     const incoming = Array.from(fileList || []).filter((file) =>
-      file.type.startsWith('image/'),
+      ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) &&
+      !/\.svgz?$/i.test(file.name || ''),
     );
     if (incoming.length === 0) {
       setError('Please choose image files (PNG or JPG).');
@@ -352,7 +357,7 @@ export default function ProductForm() {
         </div>
       </div>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
+      <AppNotification inline severity="error" message={error} />
 
       <form className="product-form" onSubmit={handleSubmit}>
         <div className="pf-layout">
@@ -401,14 +406,15 @@ export default function ProductForm() {
                     {index === 0 ? (
                       <span className="pf-image-badge">Cover</span>
                     ) : null}
-                    <button
+                    <IconButton
                       type="button"
                       className="pf-image-remove"
+                      size="small"
                       aria-label={`Remove image ${index + 1}`}
                       onClick={() => removeImage(img.id)}
                     >
-                      ×
-                    </button>
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
                   </li>
                 ))}
               </ul>
@@ -417,16 +423,16 @@ export default function ProductForm() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
               multiple
               className="pf-file-input"
               onChange={(e) => addFiles(e.target.files)}
             />
 
             <div className="pf-media-actions">
-              <button
+              <AppButton
                 type="button"
-                className="products-btn secondary"
+                variant="outlined"
                 disabled={slotsLeft <= 0}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -435,7 +441,7 @@ export default function ProductForm() {
                   : slotsLeft > 0
                     ? `Add more (${slotsLeft} left)`
                     : 'Limit reached'}
-              </button>
+              </AppButton>
             </div>
             <p className="product-form-hint">
               {images.length} of {MAX_PRODUCT_IMAGES} images
@@ -611,16 +617,12 @@ export default function ProductForm() {
               : 'Product ID is assigned automatically when you create.'}
           </p>
           <div className="product-form-actions">
-            <Link to="/products" className="products-btn secondary">
+            <AppButton variant="outlined" component={Link} to="/products">
               Cancel
-            </Link>
-            <button type="submit" className="products-btn" disabled={saving}>
-              {saving
-                ? 'Saving…'
-                : isEdit
-                  ? 'Update product'
-                  : 'Create product'}
-            </button>
+            </AppButton>
+            <AppButton type="submit" loading={saving}>
+              {isEdit ? 'Update product' : 'Create product'}
+            </AppButton>
           </div>
         </div>
       </form>

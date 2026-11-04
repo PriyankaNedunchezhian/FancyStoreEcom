@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import CategoryMark from '../components/CategoryMark';
 import { useCart } from '../context/CartContext';
+import AppButton from '../mui/components/AppButton';
+import AppQtyControl from '../mui/components/AppQtyControl';
 import { formatPrice } from '../utils/money';
 import { FREE_SHIPPING_MIN, getOrderTotal, getShippingTotal } from '../utils/shipping';
 
@@ -15,7 +17,7 @@ export default function Cart() {
       <div className="empty">
         <h1>Your bag is empty</h1>
         <p>Add a piece from the collection and it will wait here.</p>
-        <Link className="btn btn-dark" to="/shop">Shop jewellery</Link>
+        <AppButton component={Link} to="/shop">Shop jewellery</AppButton>
       </div>
     );
   }
@@ -43,14 +45,16 @@ export default function Cart() {
                 <h2><Link to={`/product/${item.id}`}>{item.name}</Link></h2>
                 <p className="price">{formatPrice(item.price)}</p>
                 <div className="bag-actions">
-                  <div className="qty">
-                    <button type="button" onClick={() => setQty(item.id, item.qty - 1)} aria-label={`Decrease ${item.name}`}>−</button>
-                    <span>{item.qty}</span>
-                    <button type="button" onClick={() => setQty(item.id, item.qty + 1)} aria-label={`Increase ${item.name}`}>+</button>
-                  </div>
-                  <button type="button" className="text-btn" onClick={() => removeItem(item.id)}>
+                  <AppQtyControl
+                    value={item.qty}
+                    onDecrease={() => setQty(item.id, item.qty - 1)}
+                    onIncrease={() => setQty(item.id, item.qty + 1)}
+                    decreaseLabel={`Decrease ${item.name}`}
+                    increaseLabel={`Increase ${item.name}`}
+                  />
+                  <AppButton size="small" variant="text" onClick={() => removeItem(item.id)}>
                     Remove
-                  </button>
+                  </AppButton>
                 </div>
               </div>
               <p className="line-total">{formatPrice(item.price * item.qty)}</p>
@@ -72,8 +76,8 @@ export default function Cart() {
           ) : (
             <p className="summary-note">Complimentary shipping applied.</p>
           )}
-          <Link className="btn btn-dark btn-block" to="/checkout">Checkout</Link>
-          <Link className="text-link" to="/shop">Continue shopping</Link>
+          <AppButton fullWidth component={Link} to="/checkout">Checkout</AppButton>
+          <AppButton fullWidth variant="text" component={Link} to="/shop">Continue shopping</AppButton>
         </aside>
       </div>
     </div>

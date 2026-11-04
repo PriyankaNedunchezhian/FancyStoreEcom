@@ -35,6 +35,7 @@ export async function payRazorpayOrder(orderId, prefill = {}) {
     email: prefill.email || session.email || '',
     phone: prefill.phone || session.phone || '',
     description: `Order #${id}`,
+    preferredMethod: prefill.preferredMethod || 'upi',
   });
 
   const result = await verifyRazorpayPayment({

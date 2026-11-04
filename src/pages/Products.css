@@ -82,9 +82,25 @@
 .products-card {
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: clamp(0.75rem, 2.5vw, 1.1rem);
   overflow: hidden;
+}
+
+.products-card.table-card {
+  padding: 0;
+}
+
+.table-card .MuiTableCell-root:first-of-type {
+  padding-left: 20px;
+}
+
+.table-card .MuiTableCell-root:last-of-type {
+  padding-right: 20px;
+}
+
+.table-card .MuiTableRow-root:last-child > .MuiTableCell-body {
+  border-bottom: 0;
 }
 
 .products-alert {
@@ -397,6 +413,7 @@
 .pf-dropzone-empty {
   display: grid;
   place-items: center;
+  align-content: center;
   gap: 0.25rem;
   min-height: 200px;
   padding: 1.1rem;

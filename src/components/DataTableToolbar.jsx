@@ -1,27 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  Download,
-  Printer,
-  Search,
-} from 'lucide-react';
-import OutlinedTextField from './form/OutlinedTextField';
-import './DataTableToolbar.css';
-
-function FileTypeIcon({ src, alt }) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="dtt-file-icon"
-      width={32}
-      height={32}
-      draggable={false}
-    />
-  );
-}
+import { useState } from 'react';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import DownloadIcon from '@mui/icons-material/Download';
+import PrintIcon from '@mui/icons-material/Print';
+import TableCell from '@mui/material/TableCell';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import AppSearchField from '../mui/components/AppSearchField';
 
 export default function DataTableToolbar({
   search,
@@ -34,104 +23,79 @@ export default function DataTableToolbar({
   onPrint,
   children,
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (!menuOpen) return undefined;
-
-    function onPointerDown(e) {
-      if (!menuRef.current?.contains(e.target)) {
-        setMenuOpen(false);
-      }
-    }
-
-    function onKeyDown(e) {
-      if (e.key === 'Escape') setMenuOpen(false);
-    }
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [menuOpen]);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   return (
-    <div className="dtt-toolbar">
-      <div className="dtt-toolbar-left">
-        <OutlinedTextField
-          className="dtt-search-field"
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 1.5,
+      }}
+    >
+      <Box sx={{ flex: { xs: '1 1 100%', sm: '0 1 320px' }, minWidth: 0 }}>
+        <AppSearchField
           label={searchPlaceholder}
-          type="search"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          startAdornment={
-            <Search size={14} strokeWidth={2.25} aria-hidden="true" />
-          }
         />
-        {countLabel ? <p className="dtt-count">{countLabel}</p> : null}
-      </div>
-
-      <div className="dtt-toolbar-right">
-        <div className="dtt-export" ref={menuRef}>
-          <button
-            type="button"
-            className="products-btn secondary dtt-icon-only"
-            disabled={exportDisabled}
-            title="Download"
-            aria-label="Download"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <Download size={16} strokeWidth={2.25} aria-hidden="true" />
-          </button>
-          {menuOpen ? (
-            <div className="dtt-export-menu" role="menu">
-              <button
-                type="button"
-                role="menuitem"
-                title="Excel (.xlsx)"
-                aria-label="Download Excel"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onExportExcel?.();
-                }}
-              >
-                <FileTypeIcon src="/icons/excel.svg" alt="" />
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                title="PDF"
-                aria-label="Download PDF"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onExportPdf?.();
-                }}
-              >
-                <FileTypeIcon src="/icons/pdf.svg" alt="" />
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        <button
-          type="button"
-          className="products-btn secondary dtt-icon-only"
-          disabled={exportDisabled}
-          title="Print"
-          aria-label="Print"
-          onClick={() => onPrint?.()}
+      </Box>
+      {countLabel ? (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ flex: '1 1 auto', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
-          <Printer size={16} strokeWidth={2.25} aria-hidden="true" />
-        </button>
+          {countLabel}
+        </Typography>
+      ) : null}
 
+      <Stack
+        direction="row"
+        useFlexGap
+        sx={{ alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, ml: 'auto' }}
+      >
+        <Tooltip title="Download">
+          <span>
+            <IconButton
+              disabled={exportDisabled}
+              onClick={(event) => setAnchorEl(event.currentTarget)}
+              aria-label="Download"
+            >
+              <DownloadIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              onExportExcel?.();
+            }}
+          >
+            Excel (.xlsx)
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              onExportPdf?.();
+            }}
+          >
+            PDF
+          </MenuItem>
+        </Menu>
+        <Tooltip title="Print">
+          <span>
+            <IconButton disabled={exportDisabled} onClick={() => onPrint?.()} aria-label="Print">
+              <PrintIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
         {children}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 }
 
@@ -141,37 +105,17 @@ export function SortableTh({
   activeKey,
   direction,
   onSort,
-  className = '',
 }) {
   const active = activeKey === sortKey;
-  const ariaSort = active
-    ? direction === 'desc'
-      ? 'descending'
-      : 'ascending'
-    : 'none';
-
-  const SortIcon = active
-    ? direction === 'desc'
-      ? ArrowDown
-      : ArrowUp
-    : ArrowUpDown;
-
   return (
-    <th className={`dtt-sortable ${className}`.trim()} aria-sort={ariaSort}>
-      <button
-        type="button"
-        className={`dtt-sort-btn${active ? ' active' : ''}`}
-        title={`Sort by ${label}`}
+    <TableCell sortDirection={active ? direction : false}>
+      <TableSortLabel
+        active={active}
+        direction={active ? direction : 'asc'}
         onClick={() => onSort(sortKey)}
       >
-        <span>{label}</span>
-        <SortIcon
-          className="dtt-sort-icon"
-          size={14}
-          strokeWidth={2}
-          aria-hidden="true"
-        />
-      </button>
-    </th>
+        {label}
+      </TableSortLabel>
+    </TableCell>
   );
 }

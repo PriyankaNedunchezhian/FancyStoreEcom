@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
 import CategoryMark from '../components/CategoryMark';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 import { useCatalog } from '../context/CatalogContext';
 import { useWishlist } from '../context/WishlistContext';
 import { isInStock } from '../data/catalog';
+import AppButton from '../mui/components/AppButton';
+import AppQtyControl from '../mui/components/AppQtyControl';
 import { getActiveProduct } from '../supabase/products';
 import { discountPercent, formatPrice } from '../utils/money';
 
@@ -53,7 +60,11 @@ export default function ProductDetail() {
   }, [id, products, catalogLoading, getById]);
 
   if (status === 'loading') {
-    return <p className="status-line">Loading this piece…</p>;
+    return (
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
   }
 
   if (!product) {
@@ -61,7 +72,7 @@ export default function ProductDetail() {
       <div className="empty">
         <h1>This piece is not in the collection</h1>
         <p>It may be inactive, or it was removed from the catalog.</p>
-        <Link className="btn btn-dark" to="/shop">Back to shop</Link>
+        <AppButton component={Link} to="/shop">Back to shop</AppButton>
       </div>
     );
   }
@@ -89,11 +100,10 @@ export default function ProductDetail() {
 
   return (
     <div className="detail">
-      <p className="crumb">
+      <Breadcrumbs className="crumb" sx={{ mb: 2 }}>
         <Link to="/shop">Shop</Link>
-        <span>/</span>
         <Link to={`/shop?category=${encodeURIComponent(product.category)}`}>{product.category}</Link>
-      </p>
+      </Breadcrumbs>
       <div className="detail-grid">
         <div>
           <div className={photo ? 'detail-visual has-photo' : 'detail-visual'} data-category={product.category}>
@@ -135,23 +145,22 @@ export default function ProductDetail() {
             <div><dt>Available</dt><dd>{product.availableQuantity}</dd></div>
           </dl>
           <div className="buy-row">
-            <div className="qty" aria-label="Quantity">
-              <button type="button" onClick={() => setQty((value) => Math.max(1, value - 1))} aria-label="Decrease quantity">−</button>
-              <span>{qty}</span>
-              <button type="button" onClick={() => setQty((value) => value + 1)} aria-label="Increase quantity">+</button>
-            </div>
-            <button type="button" className="btn btn-dark" onClick={onAdd} disabled={!inStock}>
+            <AppQtyControl
+              value={qty}
+              onDecrease={() => setQty((value) => Math.max(1, value - 1))}
+              onIncrease={() => setQty((value) => value + 1)}
+            />
+            <AppButton onClick={onAdd} disabled={!inStock}>
               {!inStock ? 'Out of stock' : added ? 'Added to bag' : 'Add to bag'}
-            </button>
-            <button
-              type="button"
-              className={wished ? 'icon-btn wish-inline on' : 'icon-btn wish-inline'}
+            </AppButton>
+            <IconButton
+              className={wished ? 'wish-inline on' : 'wish-inline'}
               aria-pressed={wished}
               aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
               onClick={onWish}
             >
-              <Heart size={18} fill={wished ? 'currentColor' : 'none'} />
-            </button>
+              {wished ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+            </IconButton>
           </div>
         </div>
       </div>

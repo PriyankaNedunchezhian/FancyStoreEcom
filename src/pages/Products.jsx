@@ -1,8 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import DataTableToolbar, { SortableTh } from '../components/DataTableToolbar';
+import AppNotification from '../mui/components/AppNotification';
 import { deleteProduct, getProducts } from '../supabase/products';
 import { exportToExcel, exportToPdf, printTable } from '../utils/tableExport';
 import { filterRows, nextSortState, sortRows } from '../utils/tableHelpers';
@@ -185,19 +199,16 @@ export default function Products() {
         onExportPdf={handleExportPdf}
         onPrint={handlePrint}
       >
-        <Link
-          to="/products/new"
-          className="products-btn dtt-icon-only"
-          title="Add product"
-          aria-label="Add product"
-        >
-          <Plus size={16} strokeWidth={2.25} aria-hidden="true" />
-        </Link>
+        <Tooltip title="Add product">
+          <IconButton component={Link} to="/products/new" color="primary" aria-label="Add product">
+            <AddIcon />
+          </IconButton>
+        </Tooltip>
       </DataTableToolbar>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
+      <AppNotification inline severity="error" message={error} />
 
-      <div className="products-card">
+      <Paper variant="outlined" className="products-card table-card">
         {loading ? (
           <p className="products-loading">Loading products…</p>
         ) : products.length === 0 ? (
@@ -207,10 +218,10 @@ export default function Products() {
         ) : visibleProducts.length === 0 ? (
           <p className="products-empty">No products match your search.</p>
         ) : (
-          <div className="products-table-wrap">
-            <table className="products-table">
-              <thead>
-                <tr>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
                   <SortableTh
                     label="ID"
                     sortKey="productId"
@@ -218,7 +229,7 @@ export default function Products() {
                     direction={sortDir}
                     onSort={handleSort}
                   />
-                  <th>Image</th>
+                  <TableCell>Image</TableCell>
                   <SortableTh
                     label="Name"
                     sortKey="name"
@@ -275,14 +286,14 @@ export default function Products() {
                     direction={sortDir}
                     onSort={handleSort}
                   />
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {visibleProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td>{product.productId}</td>
-                    <td>
+                  <TableRow key={product.id} hover>
+                    <TableCell>{product.productId}</TableCell>
+                    <TableCell>
                       {product.imageUrl || product.imageUrls?.[0] ? (
                         <img
                           src={product.imageUrl || product.imageUrls[0]}
@@ -292,63 +303,58 @@ export default function Products() {
                       ) : (
                         <span className="products-thumb placeholder">N/A</span>
                       )}
-                    </td>
-                    <td className="products-name">{product.name}</td>
-                    <td>{product.category || '—'}</td>
-                    <td>{formatMoney(product.mrp)}</td>
-                    <td>{formatMoney(product.sellingPrice)}</td>
-                    <td>{Number(product.discount || 0).toFixed(1)}%</td>
-                    <td>
-                      <span
-                        className={`products-badge ${
-                          product.stockStatus === 'In stock'
-                            ? 'in-stock'
-                            : 'out-of-stock'
-                        }`}
-                      >
-                        {product.stockStatus}
-                      </span>
-                    </td>
-                    <td>{product.availableQuantity}</td>
-                    <td>
-                      <span
-                        className={`products-badge ${
-                          product.productStatus === 'Active'
-                            ? 'active'
-                            : 'inactive'
-                        }`}
-                      >
-                        {product.productStatus}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="products-actions">
-                        <Link
-                          to={`/products/${product.id}/edit`}
-                          className="products-btn secondary dtt-icon-only"
-                          title="Edit"
-                          aria-label={`Edit ${product.name}`}
-                        >
-                          <Pencil size={15} strokeWidth={2.25} aria-hidden="true" />
-                        </Link>
-                        <button
-                          type="button"
-                          className="products-btn danger dtt-icon-only"
-                          title="Delete"
-                          aria-label={`Delete ${product.name}`}
-                          onClick={() => setDeleteTarget(product)}
-                        >
-                          <Trash2 size={15} strokeWidth={2.25} aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="products-name">{product.name}</TableCell>
+                    <TableCell>{product.category || '—'}</TableCell>
+                    <TableCell>{formatMoney(product.mrp)}</TableCell>
+                    <TableCell>{formatMoney(product.sellingPrice)}</TableCell>
+                    <TableCell>{Number(product.discount || 0).toFixed(1)}%</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        color={product.stockStatus === 'In stock' ? 'success' : 'error'}
+                        label={product.stockStatus}
+                      />
+                    </TableCell>
+                    <TableCell>{product.availableQuantity}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        color={product.productStatus === 'Active' ? 'info' : 'default'}
+                        label={product.productStatus}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Edit">
+                          <IconButton
+                            component={Link}
+                            to={`/products/${product.id}/edit`}
+                            aria-label={`Edit ${product.name}`}
+                            size="small"
+                          >
+                            <EditOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton
+                            color="error"
+                            aria-label={`Delete ${product.name}`}
+                            size="small"
+                            onClick={() => setDeleteTarget(product)}
+                          >
+                            <DeleteOutlineOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
-      </div>
+      </Paper>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

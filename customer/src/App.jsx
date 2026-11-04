@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import MuiAppProvider from './mui/MuiAppProvider';
 import { CatalogProvider } from './context/CatalogContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -17,6 +18,7 @@ import OrderDetail from './pages/OrderDetail';
 
 export default function App() {
   return (
+    <MuiAppProvider>
     <AuthProvider>
       <CatalogProvider>
         <CartProvider>
@@ -42,5 +44,6 @@ export default function App() {
         </CartProvider>
       </CatalogProvider>
     </AuthProvider>
+    </MuiAppProvider>
   );
 }

@@ -1,14 +1,21 @@
 import { Link } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import ProductCard from '../components/ProductCard';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
+import AppButton from '../mui/components/AppButton';
 
 export default function Wishlist() {
   const { user, loading: authLoading } = useAuth();
   const { items, loading } = useWishlist();
 
   if (authLoading || loading) {
-    return <p className="status-line">Loading your wishlist…</p>;
+    return (
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
   }
 
   if (!user) {
@@ -16,7 +23,7 @@ export default function Wishlist() {
       <div className="empty">
         <h1>Sign in to see your wishlist</h1>
         <p>Saved pieces are stored on your account and show up in admin.</p>
-        <Link className="btn btn-dark" to="/account">Sign in</Link>
+        <AppButton component={Link} to="/account">Sign in</AppButton>
       </div>
     );
   }
@@ -26,7 +33,7 @@ export default function Wishlist() {
       <div className="empty">
         <h1>Nothing saved yet</h1>
         <p>Tap the heart on a piece to keep it here.</p>
-        <Link className="btn btn-dark" to="/shop">Browse the collection</Link>
+        <AppButton component={Link} to="/shop">Browse the collection</AppButton>
       </div>
     );
   }

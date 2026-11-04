@@ -1,10 +1,14 @@
+.page-intro {
+  margin-bottom: 18px;
+}
+
 .page-intro h1,
 .hero h1,
 .empty h1,
 .detail-copy h1,
 .account h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-size: clamp(1.55rem, 4vw, 2.15rem);
 }
 
 .page-intro p,
@@ -14,6 +18,15 @@
 
 .page-intro p {
   margin: 10px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.page-intro a,
+.lede a,
+.form-notice a,
+.account-foot a {
+  color: var(--ink);
+  text-underline-offset: 3px;
 }
 
 .hero {
@@ -25,7 +38,7 @@
 }
 
 .hero h1 {
-  max-width: 12ch;
+  max-width: 16ch;
 }
 
 .lede {
@@ -36,6 +49,7 @@
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
   margin-top: 22px;
 }
@@ -54,8 +68,9 @@
   padding: 22px 16px 16px;
   background: #fff;
   border: 1px solid var(--line);
+  border-radius: 12px;
   color: var(--gold);
-  box-shadow: 0 16px 40px rgba(28, 25, 23, 0.06);
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.05);
 }
 
 .hero-card svg {
@@ -80,7 +95,7 @@
 
 .section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
@@ -88,7 +103,7 @@
 
 .section-head h2 {
   margin: 0;
-  font-size: 2.2rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
 }
 
 .section-head a {
@@ -98,7 +113,7 @@
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 12px;
 }
 
@@ -112,6 +127,7 @@
   border: 1px solid var(--line);
   color: var(--gold);
   text-decoration: none;
+  border-radius: 12px;
 }
 
 .category-tile svg {
@@ -128,9 +144,10 @@
 
 .category-tile strong {
   color: var(--ink);
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.55rem;
-  font-weight: 500;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .category-tile small {
@@ -144,7 +161,7 @@
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 28px 16px;
 }
 
@@ -159,6 +176,7 @@
   padding: 18px 18px 16px;
   background: #fff;
   border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .notes svg {
@@ -167,10 +185,10 @@
 
 .notes h3 {
   margin: 10px 0 6px;
-  font-family: Poppins, system-ui, sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .notes p {
@@ -181,7 +199,7 @@
 
 .shop-toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin: 8px 0 22px;
@@ -194,7 +212,11 @@
 }
 
 .pill {
-  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink-soft);
@@ -218,7 +240,7 @@
 }
 
 .sort select {
-  height: 38px;
+  height: 44px;
   padding: 0 10px;
   border: 1px solid var(--line);
   background: #fff;
@@ -226,8 +248,9 @@
 }
 
 .empty {
-  padding: 48px 0 20px;
+  padding: 48px 24px 20px;
   max-width: 460px;
+  min-height: min(48vh, 380px);
 }
 
 .empty p {
@@ -257,9 +280,10 @@
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  background: #f3eee6;
+  background: var(--tint);
   border: 1px solid var(--line);
   color: var(--gold);
+  border-radius: 12px;
 }
 
 .detail-visual svg {
@@ -279,7 +303,8 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
 }
 
 .photo-thumbs {
@@ -306,8 +331,9 @@
 .photo-thumbs img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background: #fff;
 }
 
 .bag-art.has-photo {
@@ -318,7 +344,7 @@
 .bag-art.has-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -364,13 +390,14 @@
 .qty {
   display: inline-flex;
   align-items: center;
+  height: 44px;
   border: 1px solid var(--line);
   background: #fff;
 }
 
 .qty button {
-  width: 36px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -378,7 +405,19 @@
 
 .qty span {
   min-width: 24px;
+  height: 44px;
+  display: grid;
+  place-items: center;
   text-align: center;
+}
+
+.wish-inline {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
 }
 
 .wish-inline.on {
@@ -411,9 +450,10 @@
   display: grid;
   place-items: center;
   height: 96px;
-  background: #f3eee6;
+  background: var(--tint);
   color: var(--gold);
   border: 1px solid var(--line);
+  border-radius: 10px;
 }
 
 .bag-art svg {
@@ -423,10 +463,10 @@
 
 .bag-info h2 {
   margin: 0;
-  font-family: Poppins, system-ui, sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .bag-info h2 a {
@@ -447,14 +487,17 @@
 }
 
 .summary {
-  padding: 18px;
+  padding: 20px;
   background: #fff;
   border: 1px solid var(--line);
+  border-radius: 12px;
+  position: sticky;
+  top: 96px;
 }
 
 .summary h2 {
   margin: 0 0 14px;
-  font-size: 1.8rem;
+  font-size: 1.15rem;
 }
 
 .summary p,
@@ -497,10 +540,11 @@
   padding: 28px 24px;
   background: #fff;
   border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .account-card h1 {
-  font-size: 3rem;
+  font-size: 1.55rem;
 }
 
 .mode-switch {
@@ -511,7 +555,7 @@
 }
 
 .mode-switch button {
-  height: 38px;
+  height: 44px;
   border: 1px solid var(--line);
   background: transparent;
   cursor: pointer;
@@ -539,11 +583,12 @@
   color: var(--muted);
 }
 
-.account input,
-.checkout input,
-.checkout textarea,
-.checkout select {
+.account input:not(.MuiInputBase-input),
+.checkout input:not(.MuiInputBase-input),
+.checkout textarea:not(.MuiInputBase-input),
+.checkout select:not(.MuiNativeSelect-select) {
   width: 100%;
+  min-height: 44px;
   border: 1px solid var(--line);
   background: var(--paper);
   color: var(--ink);
@@ -582,6 +627,10 @@
 }
 
 .account-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 18px;
 }
 
@@ -592,7 +641,7 @@
 
 .account-card h2 {
   margin: 0 0 14px;
-  font-size: 1.35rem;
+  font-size: 1.05rem;
 }
 
 .account-card h3 {
@@ -671,7 +720,7 @@
   width: auto;
 }
 
-.account textarea {
+.account textarea:not(.MuiInputBase-input) {
   width: 100%;
   border: 1px solid var(--line);
   background: var(--paper);
@@ -694,10 +743,6 @@
 }
 
 @media (max-width: 980px) {
-  .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .hero,
   .detail-grid,
   .bag-layout,
@@ -705,8 +750,44 @@
     grid-template-columns: 1fr;
   }
 
+  .summary {
+    position: static;
+  }
+
   .hero-stage {
-    min-height: 360px;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hero-card {
+    position: relative;
+    inset: auto;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    padding: 12px 8px;
+  }
+
+  .hero-card-a,
+  .hero-card-b,
+  .hero-card-c {
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  .hero-card svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .summary {
+    position: static;
   }
 }
 
@@ -719,28 +800,29 @@
 
   .shop-toolbar {
     flex-direction: column;
-  }
-
-  .hero-stage {
-    min-height: 300px;
-  }
-
-  .hero-card {
-    width: 150px;
-    padding: 12px;
-  }
-
-  .hero-card svg {
-    width: 64px;
-    height: 64px;
+    align-items: stretch;
   }
 
   .bag-list li {
-    grid-template-columns: 76px 1fr;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .bag-art {
+    height: 76px;
   }
 
   .line-total {
-    grid-column: 2;
+    align-self: start;
+    padding-top: 18px;
+  }
+
+  .section-head {
+    align-items: center;
+  }
+
+  .section-head h2 {
+    font-size: 1.15rem;
   }
 }
 
@@ -760,20 +842,26 @@
 
 .pay-option {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  padding: 12px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 14px 16px;
+  min-height: 88px;
   border: 1px solid var(--line);
+  border-radius: 12px;
   background: #fff;
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.9rem;
   color: var(--ink);
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .pay-option.on {
   border-color: var(--ink);
+  background: var(--tint);
 }
 
 .pay-option.disabled {
@@ -800,9 +888,13 @@
   max-width: 420px;
 }
 
+.order-detail .hero-actions {
+  margin-bottom: 18px;
+}
+
 .section-title {
   margin: 0 0 12px;
-  font-size: 1.8rem;
+  font-size: 1.15rem;
 }
 
 .summary-block {
@@ -820,10 +912,10 @@
 }
 
 .orders-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: start;
   padding: 16px 0;
   border-top: 1px solid var(--line);
 }
@@ -841,23 +933,49 @@
 
 .orders-side {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
 @media (max-width: 520px) {
   .category-grid,
-  .notes {
+  .notes,
+  .specs {
     grid-template-columns: 1fr;
   }
 
+  .hero-card {
+    padding: 10px 6px;
+  }
+
+  .hero-card svg {
+    width: 40px;
+    height: 40px;
+  }
+
   .orders-list li {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .orders-side {
-    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .page-intro h1,
+  .hero h1,
+  .empty h1,
+  .detail-copy h1,
+  .account h1 {
+    font-size: clamp(1.4rem, 6vw, 1.75rem);
+  }
+
+  .account-card {
+    padding: 20px 16px;
+  }
+
+  .account-links {
+    gap: 8px;
   }
 }

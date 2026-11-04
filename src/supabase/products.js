@@ -149,7 +149,17 @@ export async function deleteProduct(id) {
   throwIfError(error);
 }
 
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 export async function uploadProductImage(file, productId) {
+  const type = String(file?.type || '').toLowerCase();
+  if (!ALLOWED_IMAGE_TYPES.has(type) || /\.svgz?$/i.test(file?.name || '')) {
+    throw new Error('Use a JPEG, PNG, or WebP image.');
+  }
+  if (Number(file?.size) > MAX_IMAGE_BYTES) {
+    throw new Error('Each image must be 5 MB or smaller.');
+  }
   const safeName = file.name.replace(/[^\w.-]+/g, '_');
   const path = `${productId}/${Date.now()}_${safeName}`;
 

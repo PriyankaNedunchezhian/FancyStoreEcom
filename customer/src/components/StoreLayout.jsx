@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
-import { Heart, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
+import Badge from '@mui/material/Badge';
+import Dialog from '@mui/material/Dialog';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import SiteSearch from './SiteSearch';
 import { CATEGORIES } from '../data/catalog';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -8,45 +19,30 @@ import { useWishlist } from '../context/WishlistContext';
 export default function StoreLayout() {
   const { count } = useCart();
   const wishlist = useWishlist();
-  const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
-  const [term, setTerm] = useState(params.get('q') || '');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const category = params.get('category') || '';
 
   useEffect(() => {
-    setTerm(params.get('q') || '');
-  }, [params]);
-
-  useEffect(() => {
     setMenuOpen(false);
-  }, [params]);
-
-  function onSearch(event) {
-    event.preventDefault();
-    const query = term.trim();
-    const next = new URLSearchParams();
-    if (category) next.set('category', category);
-    if (query) next.set('q', query);
-    const search = next.toString();
-    navigate(search ? `/shop?${search}` : '/shop');
-    setMenuOpen(false);
-  }
+    setSearchOpen(false);
+  }, [location.pathname, location.search]);
 
   return (
     <div className="store">
       <p className="announce">Complimentary shipping on orders above ₹999</p>
       <header className="store-header">
         <div className="header-bar">
-          <button
-            type="button"
-            className="icon-btn menu-btn"
+          <IconButton
+            className="menu-btn"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+            <MenuIcon />
+          </IconButton>
           <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
             <img className="brand-logo" src="/logo.png" alt="" />
             <span>
@@ -54,28 +50,34 @@ export default function StoreLayout() {
               <small>Jewellery</small>
             </span>
           </Link>
-          <form className="search" onSubmit={onSearch}>
-            <Search size={16} aria-hidden="true" />
-            <input
-              type="search"
-              value={term}
-              onChange={(event) => setTerm(event.target.value)}
-              placeholder="Search earrings, chains, rings…"
-              aria-label="Search the collection"
-            />
-          </form>
+          <div className="search">
+            <SiteSearch />
+          </div>
           <div className="header-tools">
-            <Link className="icon-btn" to="/wishlist" aria-label={`Wishlist, ${wishlist.count} saved`}>
-              <Heart size={18} />
-              {wishlist.count > 0 && <span className="badge">{wishlist.count}</span>}
-            </Link>
-            <Link className="icon-btn" to="/account" aria-label="Account">
-              <User size={18} />
-            </Link>
-            <Link className="icon-btn" to="/cart" aria-label={`Bag, ${count} items`}>
-              <ShoppingBag size={18} />
-              {count > 0 && <span className="badge">{count}</span>}
-            </Link>
+            <IconButton
+              className="search-btn"
+              aria-label="Search the store"
+              onClick={() => setSearchOpen(true)}
+            >
+              <SearchIcon />
+            </IconButton>
+            <IconButton
+              component={Link}
+              to="/wishlist"
+              aria-label={`Wishlist, ${wishlist.count} saved`}
+            >
+              <Badge badgeContent={wishlist.count} color="primary">
+                <FavoriteBorderIcon />
+              </Badge>
+            </IconButton>
+            <IconButton component={Link} to="/account" aria-label="Account">
+              <PersonOutlineOutlinedIcon />
+            </IconButton>
+            <IconButton component={Link} to="/cart" aria-label={`Bag, ${count} items`}>
+              <Badge badgeContent={count} color="primary">
+                <ShoppingBagOutlinedIcon />
+              </Badge>
+            </IconButton>
           </div>
         </div>
         <nav className="primary-nav" aria-label="Categories">
@@ -98,18 +100,24 @@ export default function StoreLayout() {
         </nav>
       </header>
 
-      {menuOpen && (
-        <div className="mobile-drawer">
-          <form className="search mobile-search" onSubmit={onSearch}>
-            <Search size={16} aria-hidden="true" />
-            <input
-              type="search"
-              value={term}
-              onChange={(event) => setTerm(event.target.value)}
-              placeholder="Search the collection"
-              aria-label="Search the collection"
-            />
-          </form>
+      <Drawer
+        anchor="left"
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        PaperProps={{ sx: { width: 300, p: 2 } }}
+      >
+        <Stack spacing={1.5} className="mobile-drawer-inner">
+          <button
+            type="button"
+            className="drawer-search"
+            onClick={() => {
+              setMenuOpen(false);
+              setSearchOpen(true);
+            }}
+          >
+            <SearchIcon fontSize="small" />
+            Search the store
+          </button>
           <Link to="/shop" onClick={() => setMenuOpen(false)}>Shop all</Link>
           {CATEGORIES.map((item) => (
             <Link
@@ -124,8 +132,23 @@ export default function StoreLayout() {
           <Link to="/orders" onClick={() => setMenuOpen(false)}>My orders</Link>
           <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
           <Link to="/cart" onClick={() => setMenuOpen(false)}>Bag</Link>
+        </Stack>
+      </Drawer>
+
+      <Dialog
+        fullScreen
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        aria-label="Search the store"
+        slotProps={{ paper: { sx: { bgcolor: 'background.default', borderRadius: 0 } } }}
+      >
+        <div className="search-sheet">
+          <SiteSearch inline autoFocus onNavigate={() => setSearchOpen(false)} />
+          <IconButton aria-label="Close search" onClick={() => setSearchOpen(false)}>
+            <CloseIcon />
+          </IconButton>
         </div>
-      )}
+      </Dialog>
 
       <main className="store-main">
         <Outlet />

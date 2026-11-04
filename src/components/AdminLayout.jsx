@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import Avatar from '@mui/material/Avatar';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import { useAuth } from '../context/AuthContext';
 import ConfirmDialog from './ConfirmDialog';
 import ThemeSwitcher from './ThemeSwitcher';
@@ -146,14 +155,13 @@ export default function AdminLayout() {
             <p className="sidebar-brand-name">Fancy Store</p>
             <p className="sidebar-brand-sub">Admin</p>
           </div>
-          <button
-            type="button"
+          <IconButton
             className="sidebar-close"
             aria-label="Close menu"
             onClick={() => setSidebarOpen(false)}
           >
-            ×
-          </button>
+            <CloseIcon />
+          </IconButton>
         </div>
 
         <nav className="sidebar-nav">
@@ -180,9 +188,7 @@ export default function AdminLayout() {
           aria-label="Logout"
           onClick={() => setLogoutOpen(true)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M10 3H5a2 2 0 00-2 2v14a2 2 0 002 2h5v-2H5V5h5V3zm10.6 9-4.3-4.3 1.4-1.4L23.4 12l-5.7 5.7-1.4-1.4L20.6 13H9v-2h11.6z" />
-          </svg>
+          <LogoutIcon fontSize="small" />
           <span className="sidebar-link-label">Logout</span>
         </button>
       </aside>
@@ -199,38 +205,37 @@ export default function AdminLayout() {
       <div className="admin-main">
         <header className="admin-navbar">
           <div className="navbar-left">
-            <button
-              type="button"
+            <IconButton
               className="menu-toggle"
               aria-label="Open menu"
               onClick={() => setSidebarOpen(true)}
             >
-              ☰
-            </button>
-            <nav className="breadcrumbs" aria-label="Breadcrumb">
-              <span className="crumb-root">Admin</span>
-              <span className="crumb-sep">›</span>
-              <span className="crumb-current">{activePage.title}</span>
-            </nav>
+              <MenuIcon />
+            </IconButton>
+            <Breadcrumbs className="breadcrumbs" aria-label="Breadcrumb">
+              <Typography color="text.secondary">Admin</Typography>
+              <Typography color="text.primary">{activePage.title}</Typography>
+            </Breadcrumbs>
           </div>
 
           <div className="navbar-right">
             <ThemeSwitcher />
 
-            <button type="button" className="icon-btn help-btn" aria-label="Help">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 15.2a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm1.4-4.55c-.62.35-.9.58-.9 1.15h-1.8c0-1.28.74-1.9 1.45-2.3.62-.35.95-.58.95-1.15 0-.62-.5-1.05-1.2-1.05-.78 0-1.25.45-1.4 1.15l-1.75-.35C8.55 8.5 9.8 7.2 11.9 7.2c1.9 0 3.2 1.1 3.2 2.7 0 1.1-.6 1.75-1.7 2.35z" />
-              </svg>
-            </button>
+            <Tooltip title="Help">
+              <IconButton className="help-btn" aria-label="Help">
+                <HelpOutlineOutlinedIcon />
+              </IconButton>
+            </Tooltip>
 
-            <Link
+            <IconButton
+              component={Link}
               to="/profile"
               className="profile-btn"
               aria-label="Open profile"
               title="Profile"
             >
-              <span className="profile-avatar">{initials}</span>
-            </Link>
+              <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>{initials}</Avatar>
+            </IconButton>
           </div>
         </header>
 

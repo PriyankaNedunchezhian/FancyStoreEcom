@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import { useAuth } from '../context/AuthContext';
+import { passwordPolicyError } from '../utils/passwordPolicy';
+import AppButton from '../mui/components/AppButton';
+import AppTextField from '../mui/components/AppTextField';
 import {
   MAX_ADDRESSES,
   createAddress,
@@ -83,6 +94,13 @@ export default function Account() {
       setError('Fill in every field.');
       return;
     }
+    if (mode === 'register') {
+      const policyError = passwordPolicyError(form.password);
+      if (policyError) {
+        setError(policyError);
+        return;
+      }
+    }
     setBusy(true);
     try {
       if (mode === 'sign-in') {
@@ -143,8 +161,9 @@ export default function Account() {
       setError('Enter your current and new password.');
       return;
     }
-    if (passwords.next.length < 6) {
-      setError('New password must be at least 6 characters.');
+    const policyError = passwordPolicyError(passwords.next);
+    if (policyError) {
+      setError(policyError);
       return;
     }
     if (passwords.next !== passwords.confirm) {
@@ -250,7 +269,11 @@ export default function Account() {
   }
 
   if (loading) {
-    return <p className="status-line">Loading account…</p>;
+    return (
+      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
   }
 
   if (user) {
@@ -263,90 +286,72 @@ export default function Account() {
           <p>{user.email}</p>
         </header>
 
-        <div className="hero-actions account-links">
-          <Link className="btn btn-line" to="/orders">My orders</Link>
-          <Link className="btn btn-line" to="/wishlist">Wishlist</Link>
-          <button className="btn btn-dark" type="button" onClick={onSignOut} disabled={busy}>
-            Sign out
-          </button>
-        </div>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', mb: 2 }}>
+          <AppButton variant="outlined" component={RouterLink} to="/orders">My orders</AppButton>
+          <AppButton variant="outlined" component={RouterLink} to="/wishlist">Wishlist</AppButton>
+          <AppButton onClick={onSignOut} loading={busy}>Sign out</AppButton>
+        </Stack>
 
-        {error && <p className="form-notice">{error}</p>}
-        {notice && <p className="form-notice">{notice}</p>}
+        {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+        {notice ? <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert> : null}
 
         <div className="account-panels">
           <section className="account-card">
             <h2>Profile</h2>
-            <form onSubmit={onSaveProfile}>
-              <label>
-                Name
-                <input
-                  value={profile.name}
-                  onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))}
-                  autoComplete="name"
-                />
-              </label>
-              <label>
-                Phone
-                <input
-                  value={profile.phone}
-                  onChange={(event) => setProfile((current) => ({ ...current, phone: event.target.value }))}
-                  autoComplete="tel"
-                />
-              </label>
-              <label>
-                Email
-                <input value={user.email || ''} disabled readOnly />
-              </label>
-              <button className="btn btn-dark" type="submit" disabled={busy}>
-                Save profile
-              </button>
-            </form>
+            <Box component="form" onSubmit={onSaveProfile} sx={{ display: 'grid', gap: 1.5 }}>
+              <AppTextField
+                label="Name"
+                value={profile.name}
+                onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))}
+                autoComplete="name"
+              />
+              <AppTextField
+                label="Phone"
+                value={profile.phone}
+                onChange={(event) => setProfile((current) => ({ ...current, phone: event.target.value }))}
+                autoComplete="tel"
+              />
+              <AppTextField label="Email" value={user.email || ''} disabled />
+              <AppButton type="submit" loading={busy}>Save profile</AppButton>
+            </Box>
           </section>
 
           <section className="account-card">
             <h2>Password</h2>
-            <form onSubmit={onChangePassword}>
-              <label>
-                Current password
-                <input
-                  type="password"
-                  value={passwords.current}
-                  onChange={(event) => setPasswords((current) => ({ ...current, current: event.target.value }))}
-                  autoComplete="current-password"
-                />
-              </label>
-              <label>
-                New password
-                <input
-                  type="password"
-                  value={passwords.next}
-                  onChange={(event) => setPasswords((current) => ({ ...current, next: event.target.value }))}
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>
-                Confirm new password
-                <input
-                  type="password"
-                  value={passwords.confirm}
-                  onChange={(event) => setPasswords((current) => ({ ...current, confirm: event.target.value }))}
-                  autoComplete="new-password"
-                />
-              </label>
-              <button className="btn btn-dark" type="submit" disabled={busy}>
-                Update password
-              </button>
-            </form>
+            <Box component="form" onSubmit={onChangePassword} sx={{ display: 'grid', gap: 1.5 }}>
+              <AppTextField
+                label="Current password"
+                type="password"
+                value={passwords.current}
+                onChange={(event) => setPasswords((current) => ({ ...current, current: event.target.value }))}
+                autoComplete="current-password"
+              />
+              <AppTextField
+                label="New password"
+                type="password"
+                value={passwords.next}
+                onChange={(event) => setPasswords((current) => ({ ...current, next: event.target.value }))}
+                autoComplete="new-password"
+                helperText="At least 8 characters, with letters and numbers."
+              />
+              <AppTextField
+                label="Confirm new password"
+                type="password"
+                value={passwords.confirm}
+                onChange={(event) => setPasswords((current) => ({ ...current, confirm: event.target.value }))}
+                autoComplete="new-password"
+              />
+              <AppButton type="submit" loading={busy}>Update password</AppButton>
+            </Box>
           </section>
 
           <section className="account-card account-addresses">
             <div className="account-section-head">
               <h2>Saved addresses</h2>
               {canAdd && !editingId && (
-                <button className="btn btn-line" type="button" onClick={startNewAddress} disabled={busy}>
+                <AppButton variant="outlined" type="button" onClick={startNewAddress} disabled={busy}>
                   Add address
-                </button>
+                </AppButton>
               )}
             </div>
             <p className="account-foot">
@@ -371,76 +376,68 @@ export default function Account() {
                       </p>
                       <p>{row.address}</p>
                     </div>
-                    <div className="address-actions">
+                    <Stack direction="row" spacing={1} className="address-actions" sx={{ flexWrap: 'wrap' }}>
                       {!row.isDefault && (
-                        <button type="button" className="text-btn" onClick={() => onMakeDefault(row.id)} disabled={busy}>
+                        <AppButton size="small" variant="text" onClick={() => onMakeDefault(row.id)} disabled={busy}>
                           Use as default
-                        </button>
+                        </AppButton>
                       )}
-                      <button type="button" className="text-btn" onClick={() => startEditAddress(row)} disabled={busy}>
+                      <AppButton size="small" variant="text" onClick={() => startEditAddress(row)} disabled={busy}>
                         Edit
-                      </button>
-                      <button type="button" className="text-btn" onClick={() => onDeleteAddress(row.id)} disabled={busy}>
+                      </AppButton>
+                      <AppButton size="small" variant="text" color="error" onClick={() => onDeleteAddress(row.id)} disabled={busy}>
                         Delete
-                      </button>
-                    </div>
+                      </AppButton>
+                    </Stack>
                   </li>
                 ))}
               </ul>
             )}
 
             {editingId && (
-              <form className="address-form" onSubmit={onSaveAddress}>
+              <Box component="form" className="address-form" onSubmit={onSaveAddress} sx={{ display: 'grid', gap: 1.5 }}>
                 <h3>{editingId === 'new' ? 'New address' : 'Edit address'}</h3>
-                <label>
-                  Label
-                  <input
-                    value={addressForm.label}
-                    onChange={(event) => setAddressForm((current) => ({ ...current, label: event.target.value }))}
-                    placeholder="Home"
-                  />
-                </label>
-                <label>
-                  Recipient name
-                  <input
-                    value={addressForm.recipientName}
-                    onChange={(event) => setAddressForm((current) => ({ ...current, recipientName: event.target.value }))}
-                    autoComplete="name"
-                  />
-                </label>
-                <label>
-                  Phone
-                  <input
-                    value={addressForm.phone}
-                    onChange={(event) => setAddressForm((current) => ({ ...current, phone: event.target.value }))}
-                    autoComplete="tel"
-                  />
-                </label>
-                <label>
-                  Address
-                  <textarea
-                    rows={3}
-                    value={addressForm.address}
-                    onChange={(event) => setAddressForm((current) => ({ ...current, address: event.target.value }))}
-                  />
-                </label>
-                <label className="check-row">
-                  <input
-                    type="checkbox"
-                    checked={addressForm.isDefault}
-                    onChange={(event) => setAddressForm((current) => ({ ...current, isDefault: event.target.checked }))}
-                  />
-                  <span>Use as default</span>
-                </label>
-                <div className="hero-actions">
-                  <button className="btn btn-dark" type="submit" disabled={busy}>
-                    Save address
-                  </button>
-                  <button className="btn btn-line" type="button" onClick={cancelAddressForm} disabled={busy}>
+                <AppTextField
+                  label="Label"
+                  value={addressForm.label}
+                  onChange={(event) => setAddressForm((current) => ({ ...current, label: event.target.value }))}
+                  placeholder="Home"
+                />
+                <AppTextField
+                  label="Recipient name"
+                  value={addressForm.recipientName}
+                  onChange={(event) => setAddressForm((current) => ({ ...current, recipientName: event.target.value }))}
+                  autoComplete="name"
+                />
+                <AppTextField
+                  label="Phone"
+                  value={addressForm.phone}
+                  onChange={(event) => setAddressForm((current) => ({ ...current, phone: event.target.value }))}
+                  autoComplete="tel"
+                />
+                <AppTextField
+                  label="Address"
+                  multiline
+                  minRows={3}
+                  value={addressForm.address}
+                  onChange={(event) => setAddressForm((current) => ({ ...current, address: event.target.value }))}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={addressForm.isDefault}
+                      onChange={(event) => setAddressForm((current) => ({ ...current, isDefault: event.target.checked }))}
+                    />
+                  }
+                  label="Use as default"
+                />
+                <Stack direction="row" spacing={1}>
+                  <AppButton type="submit" loading={busy}>Save address</AppButton>
+                  <AppButton variant="outlined" type="button" onClick={cancelAddressForm} disabled={busy}>
                     Cancel
-                  </button>
-                </div>
-              </form>
+                  </AppButton>
+                </Stack>
+              </Box>
             )}
           </section>
         </div>
@@ -453,35 +450,33 @@ export default function Account() {
       <div className="account-card">
         <p className="kicker">Account</p>
         <h1>{mode === 'sign-in' ? 'Sign in' : 'Create account'}</h1>
-        <div className="mode-switch" role="tablist">
-          <button type="button" className={mode === 'sign-in' ? 'on' : ''} onClick={() => { setMode('sign-in'); setError(''); setNotice(''); }}>
-            Sign in
-          </button>
-          <button type="button" className={mode === 'register' ? 'on' : ''} onClick={() => { setMode('register'); setError(''); setNotice(''); }}>
-            Create account
-          </button>
-        </div>
-        <form onSubmit={onSubmit}>
+        <Tabs
+          value={mode}
+          onChange={(_event, next) => { setMode(next); setError(''); setNotice(''); }}
+          sx={{ mb: 2 }}
+        >
+          <Tab value="sign-in" label="Sign in" />
+          <Tab value="register" label="Create account" />
+        </Tabs>
+        <Box component="form" onSubmit={onSubmit} sx={{ display: 'grid', gap: 1.5 }}>
           {mode === 'register' && (
-            <label>
-              Name
-              <input value={form.name} onChange={(event) => update('name', event.target.value)} autoComplete="name" />
-            </label>
+            <AppTextField label="Name" value={form.name} onChange={(event) => update('name', event.target.value)} autoComplete="name" />
           )}
-          <label>
-            Email
-            <input type="email" value={form.email} onChange={(event) => update('email', event.target.value)} autoComplete="email" />
-          </label>
-          <label>
-            Password
-            <input type="password" value={form.password} onChange={(event) => update('password', event.target.value)} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} />
-          </label>
-          {error && <p className="form-notice">{error}</p>}
-          {notice && <p className="form-notice">{notice}</p>}
-          <button className="btn btn-dark btn-block" type="submit" disabled={busy}>
+          <AppTextField type="email" label="Email" value={form.email} onChange={(event) => update('email', event.target.value)} autoComplete="email" />
+          <AppTextField
+            type="password"
+            label="Password"
+            value={form.password}
+            onChange={(event) => update('password', event.target.value)}
+            autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+            helperText={mode === 'register' ? 'At least 8 characters, with letters and numbers.' : undefined}
+          />
+          {error ? <Alert severity="error">{error}</Alert> : null}
+          {notice ? <Alert severity="success">{notice}</Alert> : null}
+          <AppButton type="submit" loading={busy} fullWidth>
             {mode === 'sign-in' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
+          </AppButton>
+        </Box>
         <p className="account-foot">
           Create a customer account to save a wishlist, addresses, and track My Orders. Admin staff use the separate admin app with an admin role.
         </p>

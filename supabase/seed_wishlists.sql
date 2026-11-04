@@ -114,6 +114,10 @@ declare
   n integer;
   total integer;
 begin
+  if auth.uid() is not null and not public.is_admin() then
+    raise exception 'Only admins can load sample wishlist data.';
+  end if;
+
   select coalesce(array_agg(product_id order by product_id), '{}')
   into product_ids
   from (

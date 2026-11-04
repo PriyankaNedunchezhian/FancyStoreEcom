@@ -6,10 +6,21 @@ function throwPaymentError(message, code = 'payment_error') {
   throw err;
 }
 
+async function authHeaders() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const headers = { 'Content-Type': 'application/json' };
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  return headers;
+}
+
 async function postLocal(path, body) {
   const response = await fetch(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await authHeaders(),
     body: JSON.stringify(body),
   });
   const data = await response.json().catch(() => ({}));

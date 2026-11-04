@@ -1,14 +1,23 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
 import ProductCard from '../components/ProductCard';
 import { useCatalog } from '../context/CatalogContext';
 import { categoriesFor } from '../data/catalog';
+import { searchProducts } from '../utils/search';
+import AppButton from '../mui/components/AppButton';
+import AppSelect from '../mui/components/AppSelect';
 
 const SORTS = [
-  { id: 'featured', label: 'Newest' },
-  { id: 'price-asc', label: 'Price: low to high' },
-  { id: 'price-desc', label: 'Price: high to low' },
-  { id: 'name', label: 'Name' },
+  { value: 'featured', label: 'Newest', searchLabel: 'Best match' },
+  { value: 'price-asc', label: 'Price: low to high' },
+  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'name', label: 'Name' },
 ];
 
 export default function Shop() {
@@ -20,17 +29,10 @@ export default function Shop() {
   const categories = categoriesFor(catalog);
 
   const products = useMemo(() => {
-    const needle = query.toLowerCase();
-    const filtered = catalog.filter((product) => {
-      if (category && product.category !== category) return false;
-      if (!needle) return true;
-      const haystack = [product.name, product.category, product.colour, product.material, product.brand]
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(needle);
-    });
-
-    const next = [...filtered];
+    const inCategory = category
+      ? catalog.filter((product) => product.category === category)
+      : catalog;
+    const next = [...searchProducts(inCategory, query)];
     if (sort === 'price-asc') next.sort((a, b) => a.sellingPrice - b.sellingPrice);
     if (sort === 'price-desc') next.sort((a, b) => b.sellingPrice - a.sellingPrice);
     if (sort === 'name') next.sort((a, b) => a.name.localeCompare(b.name));
@@ -58,43 +60,66 @@ export default function Shop() {
         </p>
       </header>
 
-      <div className="shop-toolbar">
-        <div className="pills" role="list">
-          <Link className={category ? 'pill' : 'pill on'} to={query ? `/shop?q=${encodeURIComponent(query)}` : '/shop'}>
-            All
-          </Link>
+      <Stack
+        className="shop-toolbar"
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        sx={{
+          mb: 3,
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', sm: 'center' },
+        }}
+      >
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <Chip
+            component={Link}
+            to={query ? `/shop?q=${encodeURIComponent(query)}` : '/shop'}
+            clickable
+            color={category ? 'default' : 'primary'}
+            variant={category ? 'outlined' : 'filled'}
+            label="All"
+          />
           {categories.map((item) => {
             const next = new URLSearchParams();
             next.set('category', item.name);
             if (query) next.set('q', query);
             if (sort !== 'featured') next.set('sort', sort);
+            const selected = category === item.name;
             return (
-              <Link
+              <Chip
                 key={item.name}
-                className={category === item.name ? 'pill on' : 'pill'}
+                component={Link}
                 to={`/shop?${next.toString()}`}
-              >
-                {item.name}
-              </Link>
+                clickable
+                color={selected ? 'primary' : 'default'}
+                variant={selected ? 'filled' : 'outlined'}
+                label={item.name}
+              />
             );
           })}
-        </div>
-        <label className="sort">
-          <span>Sort</span>
-          <select value={sort} onChange={(event) => setSort(event.target.value)}>
-            {SORTS.map((option) => (
-              <option key={option.id} value={option.id}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-      </div>
+        </Stack>
+        <AppSelect
+          label="Sort"
+          value={sort}
+          onChange={(event) => setSort(event.target.value)}
+          sx={{ minWidth: 220, width: { xs: '100%', sm: 240 } }}
+        >
+          {SORTS.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {query && option.searchLabel ? option.searchLabel : option.label}
+            </MenuItem>
+          ))}
+        </AppSelect>
+      </Stack>
 
       {loading ? (
-        <p className="status-line">Loading the collection…</p>
+        <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 180 }}>
+          <CircularProgress size={28} />
+        </Box>
       ) : error ? (
         <div className="empty">
           <h2>The collection could not load</h2>
-          <p>{error}</p>
+          <Alert severity="error">{error}</Alert>
         </div>
       ) : products.length === 0 ? (
         <div className="empty">
@@ -104,9 +129,9 @@ export default function Shop() {
               ? 'Sign in with the same email and password as the admin page. The products load with that account.'
               : 'Try another word, or browse the full collection.'}
           </p>
-          <Link className="btn btn-dark" to={catalog.length === 0 ? '/account' : '/shop'}>
+          <AppButton component={Link} to={catalog.length === 0 ? '/account' : '/shop'}>
             {catalog.length === 0 ? 'Sign in' : 'Clear filters'}
-          </Link>
+          </AppButton>
         </div>
       ) : (
         <div className="product-grid">

@@ -1,5 +1,6 @@
 import { supabase } from './config';
 import { isAdminUser } from './roles';
+import { passwordPolicyError } from '../utils/passwordPolicy';
 
 function asAuthError(error, fallbackCode = 'auth/unknown') {
   const err = new Error(error?.message || 'Authentication failed.');
@@ -58,6 +59,11 @@ export async function changePassword(currentPassword, newPassword) {
     asAuthError(reauthError, 'invalid_credentials');
   }
 
+  const policyError = passwordPolicyError(newPassword);
+  if (policyError) {
+    asAuthError({ message: policyError, code: 'weak_password' }, 'weak_password');
+  }
+
   const { error: updateError } = await supabase.auth.updateUser({
     password: newPassword,
   });
@@ -65,4 +71,6 @@ export async function changePassword(currentPassword, newPassword) {
   if (updateError) {
     asAuthError(updateError, 'update_failed');
   }
+
+  await supabase.auth.signOut({ scope: 'others' });
 }

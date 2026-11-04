@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Database } from 'lucide-react';
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 import DataTableToolbar, { SortableTh } from '../components/DataTableToolbar';
+import AppNotification from '../mui/components/AppNotification';
 import {
   getWishlistOverview,
   seedWishlistDemo,
@@ -236,22 +247,19 @@ export default function Wishlist() {
         onExportPdf={handleExportPdf}
         onPrint={handlePrint}
       >
-        <button
-          type="button"
-          className="products-btn secondary dtt-icon-only"
-          disabled={seeding || loading}
-          title={seeding ? 'Loading sample…' : 'Load sample data'}
-          aria-label={seeding ? 'Loading sample…' : 'Load sample data'}
-          onClick={handleSeedDemo}
-        >
-          <Database size={16} strokeWidth={2.25} aria-hidden="true" />
-        </button>
+        <Tooltip title={seeding ? 'Loading sample…' : 'Load sample data'}>
+          <span>
+            <IconButton disabled={seeding || loading} onClick={handleSeedDemo} aria-label="Load sample data">
+              <StorageOutlinedIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
       </DataTableToolbar>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
-      {notice ? <p className="products-alert success">{notice}</p> : null}
+      <AppNotification inline severity="error" message={error} />
+      <AppNotification inline severity="success" message={notice} />
 
-      <div className="products-card">
+      <Paper variant="outlined" className="products-card table-card">
         {loading ? (
           <p className="products-loading">Loading wishlist…</p>
         ) : items.length === 0 ? (
@@ -262,10 +270,10 @@ export default function Wishlist() {
         ) : visibleItems.length === 0 ? (
           <p className="products-empty">No wishlist rows match your search.</p>
         ) : (
-          <div className="products-table-wrap">
-            <table className="products-table">
-              <thead>
-                <tr>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
                   <SortableTh
                     label="ID"
                     sortKey="productId"
@@ -273,7 +281,7 @@ export default function Wishlist() {
                     direction={sortDir}
                     onSort={handleSort}
                   />
-                  <th>Image</th>
+                  <TableCell>Image</TableCell>
                   <SortableTh
                     label="Name"
                     sortKey="name"
@@ -323,13 +331,13 @@ export default function Wishlist() {
                     direction={sortDir}
                     onSort={handleSort}
                   />
-                </tr>
-              </thead>
-              <tbody>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {visibleItems.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.productId}</td>
-                    <td>
+                  <TableRow key={item.id} hover>
+                    <TableCell>{item.productId}</TableCell>
+                    <TableCell>
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -339,31 +347,27 @@ export default function Wishlist() {
                       ) : (
                         <span className="products-thumb placeholder">N/A</span>
                       )}
-                    </td>
-                    <td className="products-name">{item.name}</td>
-                    <td>{item.category || '—'}</td>
-                    <td>{formatMoney(item.sellingPrice)}</td>
-                    <td>
-                      <span
-                        className={`products-badge ${
-                          item.stockStatus === 'In stock'
-                            ? 'in-stock'
-                            : 'out-of-stock'
-                        }`}
-                      >
-                        {item.stockStatus}
-                      </span>
-                    </td>
-                    <td>{item.availableQuantity}</td>
-                    <td>{item.wishlistCount}</td>
-                    <td>{formatDate(item.lastAddedAt)}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="products-name">{item.name}</TableCell>
+                    <TableCell>{item.category || '—'}</TableCell>
+                    <TableCell>{formatMoney(item.sellingPrice)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        color={item.stockStatus === 'In stock' ? 'success' : 'error'}
+                        label={item.stockStatus}
+                      />
+                    </TableCell>
+                    <TableCell>{item.availableQuantity}</TableCell>
+                    <TableCell>{item.wishlistCount}</TableCell>
+                    <TableCell>{formatDate(item.lastAddedAt)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
-      </div>
+      </Paper>
     </div>
   );
 }

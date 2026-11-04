@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
 import CategoryMark from './CategoryMark';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { isInStock } from '../data/catalog';
+import AppButton from '../mui/components/AppButton';
 import { discountPercent, formatPrice } from '../utils/money';
 
 export default function ProductCard({ product }) {
@@ -44,18 +48,18 @@ export default function ProductCard({ product }) {
           to={`/product/${product.id}`}
         >
           {photo ? <img src={photo} alt="" /> : <CategoryMark category={product.category} />}
-          {!inStock && <span className="stock-pill">Out of stock</span>}
+          {!inStock && <Chip size="small" color="error" label="Out of stock" className="stock-pill" />}
         </Link>
-        <button
-          type="button"
+        <IconButton
           className={wished ? 'wish on' : 'wish'}
           aria-label={wished ? `Remove ${product.name} from wishlist` : `Save ${product.name}`}
           aria-pressed={wished}
           disabled={savingWish}
           onClick={onWish}
+          size="small"
         >
-          <Heart size={16} fill={wished ? 'currentColor' : 'none'} />
-        </button>
+          {wished ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+        </IconButton>
       </div>
       <div className="product-body">
         <p className="product-category">{product.category}</p>
@@ -67,9 +71,9 @@ export default function ProductCard({ product }) {
           <span>{formatPrice(product.sellingPrice)}</span>
           {off > 0 && <span className="off">{off}% off</span>}
         </p>
-        <button type="button" className="btn btn-line card-add" onClick={onAdd} disabled={!inStock}>
+        <AppButton variant="outlined" className="card-add" onClick={onAdd} disabled={!inStock} fullWidth>
           {!inStock ? 'Out of stock' : added ? 'Added' : 'Add to bag'}
-        </button>
+        </AppButton>
       </div>
     </article>
   );

@@ -1,123 +1,121 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import ContrastIcon from '@mui/icons-material/Contrast';
 import { useTheme } from '../context/ThemeContext';
-import './ThemeSwitcher.css';
 
 export default function ThemeSwitcher({ variant = 'navbar' }) {
   const { theme, setTheme, themes } = useTheme();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const listId = useId();
   const current = themes.find((item) => item.id === theme) || themes[0];
-
-  useEffect(() => {
-    if (!open) return undefined;
-
-    function onPointerDown(event) {
-      if (!rootRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-
-    function onKeyDown(event) {
-      if (event.key === 'Escape') setOpen(false);
-    }
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
+  const open = Boolean(anchorEl);
 
   if (variant === 'panel') {
     return (
-      <div className="theme-panel">
-        <div className="theme-panel-head">
-          <h2>Appearance</h2>
-          <p>Choose a theme for the admin console.</p>
+      <Stack spacing={1.5}>
+        <div>
+          <Typography
+            component="h2"
+            sx={{ m: 0, fontSize: '1rem', fontWeight: 700, letterSpacing: '-0.02em' }}
+          >
+            Appearance
+          </Typography>
+          <Typography color="text.secondary" variant="body2" sx={{ mt: 0.25 }}>
+            Choose a theme for the admin console.
+          </Typography>
         </div>
-        <div className="theme-panel-grid" role="listbox" aria-label="Themes">
+        <Stack spacing={1}>
           {themes.map((item) => {
             const selected = item.id === theme;
             return (
-              <button
+              <Box
                 key={item.id}
+                component="button"
                 type="button"
-                role="option"
-                aria-selected={selected}
-                className={`theme-option${selected ? ' selected' : ''}`}
                 onClick={() => setTheme(item.id)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  width: '100%',
+                  p: 1.25,
+                  borderRadius: 2,
+                  border: 1,
+                  borderColor: selected ? 'primary.main' : 'divider',
+                  bgcolor: selected ? 'var(--info-bg)' : 'background.paper',
+                  color: 'text.primary',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  font: 'inherit',
+                }}
               >
-                <span className="theme-swatches" aria-hidden="true">
+                <Stack direction="row" spacing={0.5}>
                   {item.preview.map((color) => (
-                    <span
+                    <Box
                       key={color}
-                      className="theme-swatch"
-                      style={{ background: color }}
+                      sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: color, border: '1px solid', borderColor: 'divider' }}
                     />
                   ))}
-                </span>
-                <span className="theme-option-copy">
-                  <strong>{item.label}</strong>
-                  <span>{item.description}</span>
-                </span>
-              </button>
+                </Stack>
+                <Box>
+                  <Typography sx={{ fontWeight: 700 }}>{item.label}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.description}
+                  </Typography>
+                </Box>
+              </Box>
             );
           })}
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     );
   }
 
   return (
-    <div className="theme-switcher" ref={rootRef}>
-      <button
-        type="button"
-        className="icon-btn theme-trigger"
+    <>
+      <IconButton
         aria-label={`Theme: ${current.label}`}
-        title={`Theme: ${current.label}`}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listId}
-        onClick={() => setOpen((value) => !value)}
+        aria-controls={open ? listId : undefined}
+        aria-haspopup="true"
+        aria-expanded={open || undefined}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 2v14a7 7 0 010-14z" />
-        </svg>
-      </button>
-
-      {open ? (
-        <div className="theme-menu" id={listId} role="listbox" aria-label="Themes">
-          {themes.map((item) => {
-            const selected = item.id === theme;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="option"
-                aria-selected={selected}
-                className={`theme-menu-item${selected ? ' selected' : ''}`}
-                onClick={() => {
-                  setTheme(item.id);
-                  setOpen(false);
-                }}
-              >
-                <span className="theme-swatches compact" aria-hidden="true">
-                  {item.preview.map((color) => (
-                    <span
-                      key={color}
-                      className="theme-swatch"
-                      style={{ background: color }}
-                    />
-                  ))}
-                </span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+        <ContrastIcon fontSize="small" />
+      </IconButton>
+      <Menu
+        id={listId}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {themes.map((item) => (
+          <MenuItem
+            key={item.id}
+            selected={item.id === theme}
+            onClick={() => {
+              setTheme(item.id);
+              setAnchorEl(null);
+            }}
+          >
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              {item.preview.map((color) => (
+                <Box
+                  key={color}
+                  sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, border: '1px solid', borderColor: 'divider' }}
+                />
+              ))}
+              <span>{item.label}</span>
+            </Stack>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }

@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 import {
   ORDER_STATUSES,
   PAYMENT_STATUSES,
@@ -13,6 +24,9 @@ import { getProducts } from '../supabase/products';
 import OutlinedTextField from '../components/form/OutlinedTextField';
 import OutlinedSelect from '../components/form/OutlinedSelect';
 import OutlinedTextarea from '../components/form/OutlinedTextarea';
+import AppAutocomplete from '../mui/components/AppAutocomplete';
+import AppButton from '../mui/components/AppButton';
+import AppNotification from '../mui/components/AppNotification';
 import './Products.css';
 import './Orders.css';
 
@@ -229,18 +243,18 @@ export default function OrderForm() {
   return (
     <div className="order-form-page">
       <div className="order-form-top">
-        <Link
+        <IconButton
+          component={Link}
           to={isEdit ? `/orders/${id}` : '/orders'}
-          className="products-btn secondary dtt-icon-only"
           title="Back"
           aria-label="Back"
         >
-          <ArrowLeft size={15} strokeWidth={2.25} aria-hidden="true" />
-        </Link>
+          <ArrowBackIcon />
+        </IconButton>
         <strong>{isEdit ? `Edit order #${id}` : 'Create order'}</strong>
       </div>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
+      <AppNotification inline severity="error" message={error} />
 
       <form className="product-form" onSubmit={handleSubmit}>
         <section className="products-card pf-section">
@@ -328,20 +342,22 @@ export default function OrderForm() {
               </p>
             ) : null}
             <div className="order-line-add">
-              <OutlinedSelect
+              <AppAutocomplete
                 label="Product"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
+                placeholder="Search products…"
+                options={products}
+                value={products.find((product) => String(product.productId) === String(productId)) || null}
+                onChange={(next) => setProductId(next?.productId ? String(next.productId) : '')}
+                getOptionLabel={(option) =>
+                  option?.name
+                    ? `${option.name} — ${formatMoney(option.sellingPrice)} (qty ${option.availableQuantity})`
+                    : ''
+                }
+                isOptionEqualToValue={(option, selected) =>
+                  String(option?.productId) === String(selected?.productId)
+                }
                 disabled={stockDeducted}
-              >
-                <option value="">Select product…</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.productId}>
-                    {product.name} — {formatMoney(product.sellingPrice)} (qty{' '}
-                    {product.availableQuantity})
-                  </option>
-                ))}
-              </OutlinedSelect>
+              />
               <OutlinedTextField
                 label="Qty"
                 type="number"
@@ -351,38 +367,39 @@ export default function OrderForm() {
                 onChange={(e) => setQty(e.target.value)}
                 disabled={stockDeducted}
               />
-              <button
-                type="button"
-                className="products-btn secondary dtt-icon-only"
-                title="Add line"
-                aria-label="Add line"
-                disabled={stockDeducted}
-                onClick={addLineItem}
-              >
-                <Plus size={15} strokeWidth={2.25} aria-hidden="true" />
-              </button>
+              <Tooltip title="Add line">
+                <span>
+                  <IconButton
+                    aria-label="Add line"
+                    disabled={stockDeducted}
+                    onClick={addLineItem}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </div>
 
             {items.length === 0 ? (
               <p className="products-empty">No line items yet.</p>
             ) : (
-              <div className="products-table-wrap">
-                <table className="products-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Unit price</th>
-                      <th>Qty</th>
-                      <th>Line total</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product</TableCell>
+                      <TableCell>Unit price</TableCell>
+                      <TableCell>Qty</TableCell>
+                      <TableCell>Line total</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {items.map((item) => (
-                      <tr key={item.productId}>
-                        <td className="products-name">{item.productName}</td>
-                        <td>{formatMoney(item.unitPrice)}</td>
-                        <td>
+                      <TableRow key={item.productId} hover>
+                        <TableCell className="products-name">{item.productName}</TableCell>
+                        <TableCell>{formatMoney(item.unitPrice)}</TableCell>
+                        <TableCell>
                           <OutlinedTextField
                             label="Qty"
                             type="number"
@@ -395,31 +412,29 @@ export default function OrderForm() {
                             disabled={stockDeducted}
                             className="order-qty-field"
                           />
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           {formatMoney(item.unitPrice * item.quantity)}
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="products-btn danger dtt-icon-only"
-                            title="Remove"
-                            aria-label={`Remove ${item.productName}`}
-                            disabled={stockDeducted}
-                            onClick={() => removeLineItem(item.productId)}
-                          >
-                            <Trash2
-                              size={14}
-                              strokeWidth={2.25}
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title="Remove">
+                            <span>
+                              <IconButton
+                                color="error"
+                                aria-label={`Remove ${item.productName}`}
+                                disabled={stockDeducted}
+                                onClick={() => removeLineItem(item.productId)}
+                              >
+                                <DeleteOutlineOutlinedIcon />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
 
             <div className="order-totals">
@@ -440,15 +455,16 @@ export default function OrderForm() {
         </section>
 
         <div className="order-form-actions">
-          <Link
+          <AppButton
+            variant="outlined"
+            component={Link}
             to={isEdit ? `/orders/${id}` : '/orders'}
-            className="products-btn secondary"
           >
             Cancel
-          </Link>
-          <button type="submit" className="products-btn" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Update order' : 'Create order'}
-          </button>
+          </AppButton>
+          <AppButton type="submit" loading={saving}>
+            {isEdit ? 'Update order' : 'Create order'}
+          </AppButton>
         </div>
       </form>
     </div>

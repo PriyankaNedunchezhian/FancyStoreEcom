@@ -1,8 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 import ConfirmDialog from '../components/ConfirmDialog';
 import DataTableToolbar, { SortableTh } from '../components/DataTableToolbar';
+import AppNotification from '../mui/components/AppNotification';
 import {
   canDeleteOrder,
   canEditOrder,
@@ -255,30 +271,24 @@ export default function Orders() {
         onExportPdf={handleExportPdf}
         onPrint={handlePrint}
       >
-        <button
-          type="button"
-          className="products-btn secondary dtt-icon-only"
-          disabled={seeding || loading}
-          title={seeding ? 'Loading sample…' : 'Load sample data'}
-          aria-label={seeding ? 'Loading sample…' : 'Load sample data'}
-          onClick={handleSeedDemo}
-        >
-          <Database size={16} strokeWidth={2.25} aria-hidden="true" />
-        </button>
-        <Link
-          to="/orders/new"
-          className="products-btn dtt-icon-only"
-          title="Add order"
-          aria-label="Add order"
-        >
-          <Plus size={16} strokeWidth={2.25} aria-hidden="true" />
-        </Link>
+        <Tooltip title={seeding ? 'Loading sample…' : 'Load sample data'}>
+          <span>
+            <IconButton disabled={seeding || loading} onClick={handleSeedDemo} aria-label="Load sample data">
+              <StorageOutlinedIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Add order">
+          <IconButton component={Link} to="/orders/new" color="primary" aria-label="Add order">
+            <AddIcon />
+          </IconButton>
+        </Tooltip>
       </DataTableToolbar>
 
-      {error ? <p className="products-alert error">{error}</p> : null}
-      {notice ? <p className="products-alert success">{notice}</p> : null}
+      <AppNotification inline severity="error" message={error} />
+      <AppNotification inline severity="success" message={notice} />
 
-      <div className="products-card">
+      <Paper variant="outlined" className="products-card table-card">
         {loading ? (
           <p className="products-loading">Loading orders…</p>
         ) : orders.length === 0 ? (
@@ -289,10 +299,10 @@ export default function Orders() {
         ) : visibleOrders.length === 0 ? (
           <p className="products-empty">No orders match your search.</p>
         ) : (
-          <div className="products-table-wrap">
-            <table className="products-table">
-              <thead>
-                <tr>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
                   <SortableTh
                     label="Order ID"
                     sortKey="orderId"
@@ -342,81 +352,55 @@ export default function Orders() {
                     direction={sortDir}
                     onSort={handleSort}
                   />
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {visibleOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.orderId}</td>
-                    <td className="products-name">
+                  <TableRow key={order.id} hover>
+                    <TableCell>{order.orderId}</TableCell>
+                    <TableCell className="products-name">
                       {order.customerName || '—'}
-                    </td>
-                    <td>{order.itemCount}</td>
-                    <td>{formatMoney(order.total)}</td>
-                    <td>
-                      <span
-                        className={`products-badge orders-badge ${statusClass(order.status)}`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`products-badge orders-badge ${statusClass(order.paymentStatus)}`}
-                      >
-                        {order.paymentStatus}
-                      </span>
-                    </td>
-                    <td>{formatDate(order.createdAt)}</td>
-                    <td>
-                      <div className="products-actions">
-                        <Link
-                          to={`/orders/${order.id}`}
-                          className="products-btn secondary dtt-icon-only"
-                          title="View"
-                          aria-label={`View order ${order.orderId}`}
-                        >
-                          <Eye size={15} strokeWidth={2.25} aria-hidden="true" />
-                        </Link>
+                    </TableCell>
+                    <TableCell>{order.itemCount}</TableCell>
+                    <TableCell>{formatMoney(order.total)}</TableCell>
+                    <TableCell>
+                      <Chip size="small" className={`orders-badge ${statusClass(order.status)}`} label={order.status} />
+                    </TableCell>
+                    <TableCell>
+                      <Chip size="small" className={`orders-badge ${statusClass(order.paymentStatus)}`} label={order.paymentStatus} />
+                    </TableCell>
+                    <TableCell>{formatDate(order.createdAt)}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="View">
+                          <IconButton component={Link} to={`/orders/${order.id}`} size="small" aria-label={`View order ${order.orderId}`}>
+                            <VisibilityOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         {canEditOrder(order) ? (
-                          <Link
-                            to={`/orders/${order.id}/edit`}
-                            className="products-btn secondary dtt-icon-only"
-                            title="Edit"
-                            aria-label={`Edit order ${order.orderId}`}
-                          >
-                            <Pencil
-                              size={15}
-                              strokeWidth={2.25}
-                              aria-hidden="true"
-                            />
-                          </Link>
+                          <Tooltip title="Edit">
+                            <IconButton component={Link} to={`/orders/${order.id}/edit`} size="small" aria-label={`Edit order ${order.orderId}`}>
+                              <EditOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         ) : null}
                         {canDeleteOrder(order) ? (
-                          <button
-                            type="button"
-                            className="products-btn danger dtt-icon-only"
-                            title="Delete"
-                            aria-label={`Delete order ${order.orderId}`}
-                            onClick={() => setDeleteTarget(order)}
-                          >
-                            <Trash2
-                              size={15}
-                              strokeWidth={2.25}
-                              aria-hidden="true"
-                            />
-                          </button>
+                          <Tooltip title="Delete">
+                            <IconButton color="error" size="small" aria-label={`Delete order ${order.orderId}`} onClick={() => setDeleteTarget(order)}>
+                              <DeleteOutlineOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         ) : null}
-                      </div>
-                    </td>
-                  </tr>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
-      </div>
+      </Paper>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
