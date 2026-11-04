@@ -1,4 +1,5 @@
 import { supabase } from './config';
+import { notifyOrder } from './notifyOrder';
 
 export const ORDER_STATUSES = [
   'Pending',
@@ -327,7 +328,9 @@ export async function updateOrderStatus(id, nextStatus) {
       p_order_id: Number(id),
     });
     throwIfError(error);
-    return getOrder(id);
+    const order = await getOrder(id);
+    await notifyOrder(id, 'confirmed');
+    return order;
   }
 
   if (nextStatus === 'Cancelled') {
@@ -335,7 +338,9 @@ export async function updateOrderStatus(id, nextStatus) {
       p_order_id: Number(id),
     });
     throwIfError(error);
-    return getOrder(id);
+    const order = await getOrder(id);
+    await notifyOrder(id, 'cancelled');
+    return order;
   }
 
   const { error } = await supabase
@@ -347,7 +352,11 @@ export async function updateOrderStatus(id, nextStatus) {
     .eq('order_id', Number(id));
   throwIfError(error);
 
-  return getOrder(id);
+  const order = await getOrder(id);
+  if (nextStatus === 'Shipped') {
+    await notifyOrder(id, 'shipped');
+  }
+  return order;
 }
 
 export async function updatePaymentStatus(id, paymentStatus) {

@@ -8,6 +8,7 @@ import {
   defaultAddress,
   listAddresses,
 } from '../supabase/addresses';
+import { notifyOrder } from '../supabase/notifyOrder';
 import { placeOrder } from '../supabase/orders';
 import { formatPrice } from '../utils/money';
 import { payRazorpayOrder } from '../utils/payOrder';
@@ -196,6 +197,7 @@ export default function Checkout() {
       await maybeSaveAddress();
 
       if (paymentMethod === 'cod') {
+        await notifyOrder(orderId, 'placed');
         clear();
         navigate(`/order/${orderId}/confirmation`, {
           replace: true,

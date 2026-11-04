@@ -1,3 +1,4 @@
+import { notifyOrder } from '../supabase/notifyOrder';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../supabase/payments';
 import { openRazorpayCheckout } from './razorpay';
 
@@ -36,10 +37,12 @@ export async function payRazorpayOrder(orderId, prefill = {}) {
     description: `Order #${id}`,
   });
 
-  return verifyRazorpayPayment({
+  const result = await verifyRazorpayPayment({
     orderId: id,
     razorpayOrderId: payment.razorpay_order_id || session.razorpayOrderId,
     razorpayPaymentId: payment.razorpay_payment_id,
     razorpaySignature: payment.razorpay_signature,
   });
+  await notifyOrder(id, 'placed');
+  return result;
 }

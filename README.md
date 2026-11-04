@@ -213,6 +213,31 @@ npx supabase functions deploy verify-razorpay-payment
 
 Flow: place store order (`payment_method=razorpay`, Unpaid) → create Razorpay order → Checkout.js → verify signature → mark **Paid**.
 
+### Order notifications (email + WhatsApp)
+
+Checkout and admin status changes call the `notify-order` Edge Function (soft-fail — orders never block if messaging fails).
+
+| Channel | Provider |
+|---------|----------|
+| Email | [Resend](https://resend.com) |
+| WhatsApp | [Wapito](https://wapito.com/docs/api/messages/send-text/) (no SMS — Wapito is WhatsApp-only) |
+
+| Event | Trigger |
+|-------|---------|
+| `placed` | COD place, or Razorpay paid (including Pay from My Orders) |
+| `confirmed` / `shipped` / `cancelled` | Admin order status change |
+
+1. Create a Resend API key (test from-address: `onboarding@resend.dev`).
+2. Create a [Wapito](https://wapito.com) channel, link your WhatsApp number (QR), and copy the channel token (`wpt_...`).
+3. Deploy and set secrets:
+
+```bash
+npx.cmd supabase functions deploy notify-order --yes
+npx.cmd supabase secrets set RESEND_API_KEY=re_xxx ORDER_EMAIL_FROM="Kumar Fancy Store <onboarding@resend.dev>" WAPITO_API_TOKEN=wpt_xxx
+```
+
+Phones are normalized to E.164 with default country **+91**. Email needs `customer_email`; WhatsApp needs `customer_phone`. Wapito is an unofficial WhatsApp API — warm up the number and avoid spammy bursts.
+
 ---
 
 ## 5. Run both apps together
@@ -272,7 +297,7 @@ FancyStoreEcom/
 │   ├── razorpay_orders.sql # Razorpay columns + COD/online place-order
 │   ├── shipping_fees.sql   # shipping_total + ₹79 / free at ₹999+
 │   ├── customer_addresses.sql # Saved delivery addresses (max 5)
-│   ├── functions/          # Edge Functions (create/verify Razorpay)
+│   ├── functions/          # Edge Functions (Razorpay + notify-order)
 │   ├── seed_orders.sql
 │   └── seed_wishlists.sql
 ├── customer/               # Customer storefront
@@ -293,6 +318,7 @@ FancyStoreEcom/
 | Customer shop shows no products | Run `supabase/customer_public_products.sql`, or sign in on `/account` with the admin email/password. Confirm products are **Active** in admin. |
 | Place order fails / RPC missing | Run `supabase/customer_orders.sql` in the SQL Editor, then try checkout again. |
 | Online payment fails / functions missing | Run `razorpay_orders.sql`, deploy the two Edge Functions, set `RAZORPAY_*` secrets, and set `VITE_RAZORPAY_KEY_ID` in `customer/.env`. |
+| No order email / WhatsApp | Deploy `notify-order`, set `RESEND_API_KEY` + `WAPITO_API_TOKEN`. Checkout still works if messaging is missing (soft-fail). |
 | Admin login says “Admin access only” | Set App Metadata `{ "role": "admin" }` on that user, run `admin_roles.sql`, then sign out/in. |
 | Guest order not in My Orders | Expected — guest orders have no account. Sign in before placing to track them. |
 | Razorpay order created but unpaid | Customer closed Checkout. Order stays Unpaid; complete payment or handle in admin. |
