@@ -16,8 +16,11 @@ copy ..\.env .env
    - [`../supabase/customer_public_products.sql`](../supabase/customer_public_products.sql)
    - [`../supabase/customer_orders.sql`](../supabase/customer_orders.sql)
    - [`../supabase/admin_roles.sql`](../supabase/admin_roles.sql) — then set admin App Metadata `{ "role": "admin" }`
+   - [`../supabase/razorpay_orders.sql`](../supabase/razorpay_orders.sql) — for online payment
 
-3. Install and run:
+3. For Razorpay, set `VITE_RAZORPAY_KEY_ID` in `.env` and deploy the Edge Functions (see root README).
+
+4. Install and run:
 
 ```bash
 npm install
@@ -35,10 +38,10 @@ Opens at [http://localhost:5174](http://localhost:5174). Admin stays on port **5
 | `/product/:id` | Product detail |
 | `/cart` | Bag |
 | `/wishlist` | Saved pieces |
-| `/checkout` | Guest or signed-in checkout (COD) |
+| `/checkout` | Guest or signed-in checkout (COD or Razorpay) |
 | `/order/:id/confirmation` | Order placed |
 | `/orders` | My orders (signed in) |
 | `/orders/:id` | Order detail |
 | `/account` | Sign in / create account |
 
-Active products come from the shared Supabase catalog. Checkout creates **Pending / Unpaid** cash-on-delivery orders. Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.
+Active products come from the shared Supabase catalog. Checkout supports **COD** (Unpaid) and **Razorpay** (Paid after verify). Wishlists and My Orders need a signed-in user. Admin confirms stock from the admin Orders UI.

@@ -9,6 +9,9 @@ export default function OrderConfirmation() {
   const { user } = useAuth();
   const order = state?.order;
   const orderId = order?.orderId || id;
+  const method = order?.paymentMethod || 'cod';
+  const paymentStatus = order?.paymentStatus || (method === 'razorpay' ? 'Paid' : 'Unpaid');
+  const isOnlinePaid = method === 'razorpay' && paymentStatus === 'Paid';
 
   return (
     <div className="confirm-page">
@@ -16,8 +19,17 @@ export default function OrderConfirmation() {
         <p className="kicker">Order placed</p>
         <h1>Thank you</h1>
         <p>
-          Your order <strong>#{orderId}</strong> is Pending. Payment is cash on delivery
-          ({paymentMethodLabel(order?.paymentMethod || 'cod')}).
+          {isOnlinePaid ? (
+            <>
+              Your order <strong>#{orderId}</strong> is Pending and payment is{' '}
+              <strong>Paid</strong> via {paymentMethodLabel(method)}.
+            </>
+          ) : (
+            <>
+              Your order <strong>#{orderId}</strong> is Pending. Payment is cash on delivery
+              ({paymentMethodLabel(method)}).
+            </>
+          )}
         </p>
       </header>
 
@@ -33,6 +45,13 @@ export default function OrderConfirmation() {
             ))}
           </ul>
           <p><span>Total</span><strong>{formatPrice(order.total ?? order.subtotal)}</strong></p>
+          <p>
+            <span>Payment</span>
+            <strong>
+              {paymentMethodLabel(method)}
+              {paymentStatus ? ` · ${paymentStatus}` : ''}
+            </strong>
+          </p>
           {order.address && (
             <p className="summary-note">
               Deliver to {order.name}, {order.address}

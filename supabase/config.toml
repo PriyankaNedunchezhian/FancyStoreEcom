@@ -1,0 +1,8 @@
+# Minimal Supabase config for Edge Functions (Razorpay).
+# Project ref and secrets are set via CLI / Dashboard — not committed here.
+
+[functions.create-razorpay-order]
+verify_jwt = false
+
+[functions.verify-razorpay-payment]
+verify_jwt = false

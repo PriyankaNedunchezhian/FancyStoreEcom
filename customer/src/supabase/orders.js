@@ -46,6 +46,8 @@ function mapOrder(row) {
     status: row.status ?? 'Pending',
     paymentStatus: row.payment_status ?? 'Unpaid',
     paymentMethod: row.payment_method ?? 'cod',
+    razorpayOrderId: row.razorpay_order_id ?? '',
+    razorpayPaymentId: row.razorpay_payment_id ?? '',
     subtotal: Number(row.subtotal ?? 0),
     discountTotal: Number(row.discount_total ?? 0),
     total: Number(row.total ?? 0),
@@ -76,7 +78,7 @@ const ORDER_SELECT = `
 `;
 
 /**
- * Places a Pending / Unpaid COD order via security-definer RPC.
+ * Places a Pending / Unpaid order via security-definer RPC (cod or razorpay).
  * Works for guests (anon) and signed-in customers.
  */
 export async function placeOrder({
@@ -166,6 +168,7 @@ export async function getMyOrder(id) {
 }
 
 export function paymentMethodLabel(method) {
-  if (method === 'razorpay' || method === 'stripe') return 'Online payment';
+  if (method === 'razorpay') return 'Razorpay';
+  if (method === 'stripe') return 'Online payment';
   return 'Cash on delivery';
 }

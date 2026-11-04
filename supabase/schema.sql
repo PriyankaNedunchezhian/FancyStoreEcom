@@ -186,6 +186,8 @@ create table if not exists public.orders (
     check (payment_status in ('Unpaid', 'Paid', 'Refunded')),
   payment_method text not null default 'cod'
     check (payment_method in ('cod', 'razorpay', 'stripe')),
+  razorpay_order_id text,
+  razorpay_payment_id text,
   subtotal numeric(12, 2) not null default 0,
   discount_total numeric(12, 2) not null default 0,
   total numeric(12, 2) not null default 0,
@@ -221,6 +223,16 @@ alter table public.orders drop constraint if exists orders_payment_method_check;
 alter table public.orders
   add constraint orders_payment_method_check
   check (payment_method in ('cod', 'razorpay', 'stripe'));
+
+alter table public.orders
+  add column if not exists razorpay_order_id text;
+
+alter table public.orders
+  add column if not exists razorpay_payment_id text;
+
+create index if not exists orders_razorpay_order_id_idx
+  on public.orders (razorpay_order_id)
+  where razorpay_order_id is not null;
 
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
@@ -478,8 +490,11 @@ begin
   if v_address = '' then
     raise exception 'Shipping address is required.';
   end if;
-  if v_method is distinct from 'cod' then
-    raise exception 'Only cash on delivery is available right now.';
+  if v_method not in ('cod', 'razorpay') then
+    raise exception 'Unsupported payment method.';
+  end if;
+  if v_method = 'razorpay' and v_email = '' then
+    raise exception 'Email is required for online payment.';
   end if;
   if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
     raise exception 'Add at least one product to the order.';
@@ -547,7 +562,7 @@ begin
     v_address,
     'Pending',
     'Unpaid',
-    'cod',
+    v_method,
     v_subtotal,
     0,
     v_total,

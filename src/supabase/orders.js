@@ -67,6 +67,8 @@ function mapOrder(row) {
     status: row.status ?? 'Pending',
     paymentStatus: row.payment_status ?? 'Unpaid',
     paymentMethod: row.payment_method ?? 'cod',
+    razorpayOrderId: row.razorpay_order_id ?? '',
+    razorpayPaymentId: row.razorpay_payment_id ?? '',
     subtotal: Number(row.subtotal ?? 0),
     discountTotal: Number(row.discount_total ?? 0),
     total: Number(row.total ?? 0),

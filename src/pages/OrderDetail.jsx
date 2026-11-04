@@ -292,6 +292,28 @@ export default function OrderDetail() {
                 />
               </dd>
             </div>
+            <div>
+              <dt>Method</dt>
+              <dd>
+                {order.paymentMethod === 'razorpay'
+                  ? 'Razorpay'
+                  : order.paymentMethod === 'cod'
+                    ? 'Cash on delivery'
+                    : order.paymentMethod || '—'}
+              </dd>
+            </div>
+            {(order.razorpayOrderId || order.razorpayPaymentId) && (
+              <>
+                <div>
+                  <dt>Razorpay order</dt>
+                  <dd>{order.razorpayOrderId || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Razorpay payment</dt>
+                  <dd>{order.razorpayPaymentId || '—'}</dd>
+                </div>
+              </>
+            )}
           </dl>
         </aside>
       </div>
